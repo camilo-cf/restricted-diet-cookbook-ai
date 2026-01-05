@@ -1,0 +1,506 @@
+openapi: 3.1.0
+info:
+  title: Restricted Diet Cookbook AI API
+  version: 1.0.0
+  description: |
+    API for generating personalized recipes.
+    
+    **Principles:**
+    - Contract-First (OpenAPI is source of truth).
+    - Cookie-based Auth (httpOnly).
+    - Cursor Pagination for lists.
+    - RFC 7807 Problems.
+servers:
+  - url: http://localhost:8000
+    description: Local Development
+  - url: https://cookbook-api.onrender.com
+    description: Production
+
+components:
+  schemas:
+    # --- Base Types ---
+    Uuid:
+      type: string
+      format: uuid
+      example: "123e4567-e89b-12d3-a456-426614174000"
+    
+    Timestamp:
+      type: string
+      format: date-time
+      example: "2023-10-27T10:00:00Z"
+
+    # --- Errors ---
+    Problem:
+      type: object
+      required: [type, title, status, correlationId]
+      properties:
+        type:
+          type: string
+          format: uri
+          default: "about:blank"
+        title:
+          type: string
+          example: "Validation Error"
+        status:
+          type: integer
+          example: 422
+        detail:
+          type: string
+          example: "Password must be at least 8 characters."
+        instance:
+          type: string
+          format: uri
+        correlationId:
+          type: string
+          description: "Unique request ID for tracing"
+
+    # --- Auth ---
+    User:
+      type: object
+      required: [id, email, full_name, is_active]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        email:
+          type: string
+          format: email
+        full_name:
+          type: string
+        is_active:
+          type: boolean
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          format: email
+        password:
+          type: string
+
+    CsrfResponse:
+      type: object
+      required: [csrfToken]
+      properties:
+        csrfToken:
+          type: string
+
+    # --- Uploads ---
+    PresignRequest:
+      type: object
+      required: [filename, contentType, sizeBytes]
+      properties:
+        filename:
+          type: string
+        contentType:
+          type: string
+          enum: [image/jpeg, image/png, image/webp]
+        sizeBytes:
+          type: integer
+          maximum: 8388608 # 8MB
+
+    PresignResponse:
+      type: object
+      required: [uploadId, uploadUrl]
+      properties:
+        uploadId:
+          $ref: '#/components/schemas/Uuid'
+        uploadUrl:
+          type: string
+          format: uri
+        fields:
+          type: object # S3 presigned fields
+          additionalProperties:
+            type: string
+
+    UploadConfirmation:
+      type: object
+      required: [uploadId]
+      properties:
+        uploadId:
+          $ref: '#/components/schemas/Uuid'
+
+    # --- Recipes ---
+    DietaryRestriction:
+      type: string
+      enum: [vegan, vegetarian, gluten_free, dairy_free, nut_free, keto, paleo]
+
+    Recipe:
+      type: object
+      required: [id, title, ingredients, instructions, dietaryTags, created_at]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        title:
+          type: string
+        description:
+          type: string
+        ingredients:
+          type: array
+          items:
+            type: string
+        instructions:
+          type: array
+          items:
+            type: string
+        dietaryTags:
+          type: array
+          items:
+            $ref: '#/components/schemas/DietaryRestriction'
+        prepTimeMinutes:
+          type: integer
+        cookTimeMinutes:
+          type: integer
+        calories:
+          type: integer
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+
+    RecipeList:
+      type: object
+      required: [data, hasMore]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Recipe'
+        nextCursor:
+          type: string
+          nullable: true
+          description: "Base64 encoded cursor for next page"
+        hasMore:
+          type: boolean
+
+    RecipeCreate:
+      type: object
+      required: [title, ingredients, instruction_text, dietary_tags]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        ingredients:
+          type: array
+          items:
+            type: string
+        instruction_text:
+          type: string
+          description: "Raw text or steps"
+        dietary_tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/DietaryRestriction'
+
+    IngredientAdd:
+      type: object
+      required: [name, amount]
+      properties:
+        name:
+          type: string
+        amount:
+          type: string
+
+    # --- Health ---
+    HealthStatus:
+      type: string
+      enum: [ok, degraded, down]
+
+    HealthResponse:
+      type: object
+      required: [status, checks]
+      properties:
+        status:
+          $ref: '#/components/schemas/HealthStatus'
+        checks:
+          type: object
+          properties:
+            db:
+              $ref: '#/components/schemas/HealthStatus'
+            storage:
+              $ref: '#/components/schemas/HealthStatus'
+            ai:
+              $ref: '#/components/schemas/HealthStatus'
+
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: session_id
+    csrfHeader:
+      type: apiKey
+      in: header
+      name: X-CSRF-Token
+
+security:
+  - cookieAuth: []
+  - csrfHeader: [] # Applied globally, but safe methods ignore it via checks
+
+paths:
+  /health:
+    get:
+      summary: System Health Check
+      security: []
+      responses:
+        '200':
+          description: System status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /auth/login:
+    post:
+      summary: Login
+      security: [] # Public endpoint
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Session created
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                description: HttpOnly session cookie
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid credentials
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /auth/logout:
+    post:
+      summary: Logout
+      responses:
+        '200':
+          description: Session cleared
+        '401':
+           description: Not logged in
+
+  /auth/me:
+    get:
+      summary: Get Current User
+      responses:
+        '200':
+          description: Current user details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Not logged in
+
+  /auth/csrf:
+    get:
+      summary: Get CSRF Token
+      description: Use this token in X-CSRF-Token header for unsafe requests
+      responses:
+        '200':
+          description: Token generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CsrfResponse'
+
+  /uploads/presign:
+    post:
+      summary: Create Presigned Upload URL
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PresignRequest'
+      responses:
+        '200':
+          description: URL generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresignResponse'
+        '429':
+          description: Rate limit exceeded
+
+  /uploads/complete:
+    post:
+      summary: Confirm Upload
+      requestBody:
+         content:
+           application/json:
+             schema:
+               $ref: '#/components/schemas/UploadConfirmation'
+      responses:
+        '204':
+          description: Upload marked as complete
+        '400':
+          description: Validation failed
+
+  /recipes:
+    get:
+      summary: List Recipes
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: string
+          description: Pagination cursor
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+        - name: restrictions
+          in: query
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/DietaryRestriction'
+      responses:
+        '200':
+          description: List of recipes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeList'
+    
+    post:
+      summary: Create Recipe Manually
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+
+  /recipes/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Uuid'
+    get:
+      summary: Get Recipe Details
+      responses:
+        '200':
+          description: Recipe details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+        '404':
+          description: Not found
+
+    patch:
+      summary: Update Recipe
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeCreate' 
+              # In reality, verify partial updates, reusing Create schema for brevity in MVP
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+
+  /recipes/{id}/ingredients:
+    post:
+      summary: Add Ingredient to Recipe
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IngredientAdd'
+      responses:
+        '200':
+          description: Ingredient added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+
+  /recipes/{id}/images:
+      post:
+        summary: Link Image to Recipe
+        parameters:
+          - name: id
+            in: path
+            required: true
+            schema:
+              $ref: '#/components/schemas/Uuid'
+        requestBody:
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [uploadId]
+                properties:
+                  uploadId:
+                    $ref: '#/components/schemas/Uuid'
+        responses:
+          '200':
+             description: Image linked
+
+  /recipes/{id}/ai/steps:
+    post:
+      summary: AI Generate Steps
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: Recipe updated with AI steps
+          content:
+            text/event-stream: # Streaming supported
+              schema:
+                type: string
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/Recipe'
+
+  /recipes/{id}/ai/nutrition:
+    post:
+      summary: AI Estimate Nutrition
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: Nutrition estimated
+          content:
+            application/json:
+               schema:
+                 $ref: '#/components/schemas/Recipe'

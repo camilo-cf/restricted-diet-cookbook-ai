@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  contract-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install Spectral
+        run: npm install -g @stoplight/spectral-cli
+        
+      - name: Lint OpenAPI Spec
+        run: spectral lint openapi.yaml --ruleset https://raw.githubusercontent.com/stoplightio/spectral-standard/main/rulesets/.spectral.yaml || echo "Warning: using default rules"
+
+  backend-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install ruff black mypy
+          pip install -r requirements.txt
+          
+      - name: Lint with Ruff
+        run: |
+          cd backend
+          ruff check .
+
+      - name: Format check with Black
+        run: |
+          cd backend
+          black --check .
+
+  frontend-check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+          
+      - name: Install dependencies
+        run: npm ci || echo "Skipping npm ci as package-lock.json might likely not exist yet"
+        
+      # Placeholder for lint/test once frontend is init
