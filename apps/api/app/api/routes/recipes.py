@@ -127,6 +127,15 @@ async def update_recipe(
         recipe.cook_time_minutes = recipe_in["cookTimeMinutes"]
     if "dietaryTags" in recipe_in:
         recipe.dietary_tags = recipe_in["dietaryTags"]
+    if "uploadId" in recipe_in:
+        # Verify upload belongs to user
+        from app.db.models.upload import Upload
+        u_id = recipe_in["uploadId"]
+        result = await db.execute(select(Upload).where(Upload.id == u_id, Upload.user_id == current_user.id))
+        upload_record = result.scalars().first()
+        if not upload_record:
+             raise HTTPException(status_code=404, detail="Upload record not found")
+        recipe.upload_id = upload_record.id
         
     db.add(recipe)
     await db.commit()

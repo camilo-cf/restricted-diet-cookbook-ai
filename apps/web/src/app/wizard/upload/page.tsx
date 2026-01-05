@@ -106,7 +106,14 @@ export default function UploadPage() {
         }
 
         // 2. Upload to S3 (MinIO)
-        const uploadRes = await fetch(presignData.uploadUrl, {
+        // PATCH: If running locally and URL contains 'minio:9000', replace with 'localhost:9000'
+        // This is necessary because 'minio' is only resolvable inside the Docker network.
+        let uploadUrl = presignData.uploadUrl;
+        if (uploadUrl.includes("minio:9000")) {
+            uploadUrl = uploadUrl.replace("minio:9000", "localhost:9000");
+        }
+
+        const uploadRes = await fetch(uploadUrl, {
             method: "PUT",
             body: file,
             headers: {
@@ -186,11 +193,22 @@ export default function UploadPage() {
         />
         
         {fileName ? (
-           <div className="flex flex-col items-center animate-in fade-in zoom-in duration-300">
-             <div className="h-16 w-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-3">
-               <ImageIcon size={32} />
+           <div className="flex flex-col items-center animate-in fade-in zoom-in duration-300 w-full">
+             <div className="relative h-48 w-full max-w-sm mb-4 rounded-xl overflow-hidden border border-emerald-100 shadow-inner bg-slate-50">
+               {data.photoKey && (
+                    <img 
+                        src={`http://localhost:9000/recipes/${data.photoKey.replace("uploaded/", "")}`}
+                        alt="Preview"
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                            // Fallback if URL construction fails or object not public yet
+                            (e.target as any).style.display = 'none';
+                            (e.target as any).parentElement.innerHTML = '<div class="flex items-center justify-center h-full text-emerald-600"><ChefHat size={48} /></div>';
+                        }}
+                    />
+               )}
              </div>
-             <p className="font-medium text-gray-900 mb-1">{fileName}</p>
+             <p className="font-semibold text-gray-900 mb-1">{fileName}</p>
              <p className="text-xs text-green-600 font-medium mb-4">Ready to analyze</p>
              <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); clearFile(); }}>
                <X className="w-4 h-4 mr-1" /> Remove

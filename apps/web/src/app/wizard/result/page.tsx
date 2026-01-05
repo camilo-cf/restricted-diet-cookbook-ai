@@ -6,7 +6,7 @@ import { useWizard } from "@/context/wizard-context";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CheckCircle, Clock, Users, Save, Printer, Share2, ChefHat, Loader2 } from "lucide-react";
+import { CheckCircle, Clock, Users, Save, Printer, Share2, ChefHat, Loader2, Camera, Upload, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -57,12 +57,56 @@ export default function ResultPage() {
   });
 
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [resultPhotoId, setResultPhotoId] = useState<string | null>(null);
 
   useEffect(() => {
     // If no data and no mock intended, redirect? 
     // Commented out to allow seeing mock in dev
     // if (!data.generatedRecipe) router.push("/wizard/ingredients");
   }, [data, router]);
+
+  const handleResultPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!e.target.files?.[0]) return;
+      setIsUploading(true);
+      try {
+          const file = e.target.files[0];
+          // 1. Presign
+          const { data: presignData, error: presignError } = await api.POST("/uploads/presign", {
+              body: {
+                  filename: file.name,
+                  contentType: file.type as any,
+                  sizeBytes: file.size
+              }
+          });
+          if (presignError || !presignData) throw new Error("Presign failed");
+
+          // 2. Upload (MinIO Local Patch)
+          let uploadUrl = presignData.uploadUrl;
+          if (uploadUrl.includes("minio:9000")) {
+              uploadUrl = uploadUrl.replace("minio:9000", "localhost:9000");
+          }
+
+          const uploadRes = await fetch(uploadUrl, {
+              method: "PUT",
+              body: file,
+              headers: { "Content-Type": file.type }
+          });
+          if (!uploadRes.ok) throw new Error("Upload failed");
+
+          // 3. Complete
+          await api.POST("/uploads/complete", {
+              body: { uploadId: presignData.uploadId }
+          });
+
+          setResultPhotoId(presignData.uploadId);
+      } catch (err) {
+          console.error(err);
+          alert("Failed to upload photo.");
+      } finally {
+          setIsUploading(false);
+      }
+  };
 
   const handleSave = async () => {
       if (!data.generatedRecipe?.id) {
@@ -80,7 +124,8 @@ export default function ResultPage() {
                   cookTimeMinutes: Number(formData.cookTimeMinutes),
                   ingredients: formData.ingredients.split("\n").filter((line: string) => line.trim() !== ""),
                   instructions: formData.instructions.split("\n").filter((line: string) => line.trim() !== ""),
-                  dietaryTags: formData.dietaryTags
+                  dietaryTags: formData.dietaryTags,
+                  uploadId: resultPhotoId || undefined
               } as any
           });
           
@@ -128,6 +173,40 @@ export default function ResultPage() {
       </div>
 
       <Card className="border shadow-md overflow-hidden bg-white/90 backdrop-blur-sm">
+        {/* Result Photo Upload Area */}
+        <div className="bg-emerald-50/30 border-b p-6 flex flex-col items-center justify-center border-emerald-100/50">
+            {resultPhotoId ? (
+                <div className="relative group w-full max-w-md">
+                    <div className="h-64 w-full rounded-2xl overflow-hidden shadow-lg border-2 border-white">
+                        <img 
+                            src={`http://localhost:9000/recipes/${resultPhotoId}`}
+                            alt="Your dish"
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+                    <Button 
+                        variant="destructive" 
+                        size="icon" 
+                        className="absolute -top-2 -right-2 rounded-full h-8 w-8 shadow-lg"
+                        onClick={() => setResultPhotoId(null)}
+                    >
+                        <X size={14} />
+                    </Button>
+                </div>
+            ) : (
+                <div className="text-center py-4">
+                    <label className="cursor-pointer group flex flex-col items-center">
+                        <div className="h-16 w-16 bg-white text-emerald-600 rounded-2xl flex items-center justify-center mb-3 shadow-sm border border-emerald-100 group-hover:scale-110 transition-transform duration-300">
+                            {isUploading ? <Loader2 className="animate-spin" /> : <Camera size={28} />}
+                        </div>
+                        <span className="font-bold text-emerald-900">Show us your masterpiece!</span>
+                        <span className="text-sm text-emerald-600/70">Upload a photo of your cooked dish</span>
+                        <input type="file" className="hidden" accept="image/*" onChange={handleResultPhoto} disabled={isUploading} />
+                    </label>
+                </div>
+            )}
+        </div>
+
         {/* Metadata Row */}
         <CardHeader className="bg-slate-50 border-b py-4">
             <div className="flex flex-wrap justify-center items-center gap-6 md:gap-10 text-sm font-medium text-slate-600">
