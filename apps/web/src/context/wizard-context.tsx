@@ -7,8 +7,9 @@ type Recipe = components["schemas"]["Recipe"];
 interface WizardData {
   ingredients: string;
   restrictions: string;
-  photoKey?: string; // S3 Object Key
+  photoKey?: string; // S3 Object Key (display only)
   uploadId?: string; // Backend Database ID
+  photoPreview?: string; // Full browser-accessible URL
   generatedRecipe?: Recipe;
 }
 

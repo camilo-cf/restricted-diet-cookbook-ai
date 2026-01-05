@@ -5,14 +5,14 @@ import { api } from "@/lib/api";
 import { useWizard } from "@/context/wizard-context";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { UploadCloud, Image as ImageIcon, X } from "lucide-react";
+import { UploadCloud, Image as ImageIcon, X, Loader2, ChefHat } from "lucide-react";
+import { resizeImage } from "@/lib/image";
 
 export default function UploadPage() {
   const router = useRouter();
   const { data, updateData } = useWizard();
   const [isDragging, setIsDragging] = useState(false);
-  // We'll just display the file name locally for now, 
-  // essentially mocking the "upload" to just selection logic until we hook up S3.
+  const [isUploading, setIsUploading] = useState(false);
   const [fileName, setFileName] = useState<string | null>(data.photoKey ? "Previously uploaded image" : null);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -40,117 +40,56 @@ export default function UploadPage() {
     }
   };
 
-  // Helper to resize image client-side
-  const resizeImage = (file: File, maxDim = 1200): Promise<File> => {
-    return new Promise((resolve, reject) => {
-      const img = document.createElement("img");
-      img.src = URL.createObjectURL(file);
-      img.onload = () => {
-        let width = img.width;
-        let height = img.height;
-        
-        // Calculate new dimensions
-        if (width > height) {
-           if (width > maxDim) {
-               height = Math.round(height * (maxDim / width));
-               width = maxDim;
-           }
-        } else {
-           if (height > maxDim) {
-               width = Math.round(width * (maxDim / height));
-               height = maxDim;
-           }
-        }
-
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return reject("Canvas context unavailable");
-        
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        canvas.toBlob((blob) => {
-            if (!blob) return reject("Blob creation failed");
-            const resizedFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
-                type: "image/jpeg",
-                lastModified: Date.now(),
-            });
-            resolve(resizedFile);
-        }, "image/jpeg", 0.8); // 80% quality JPEG
-      };
-      img.onerror = (err) => reject("Image load failed");
-    });
-  };
-
   const handleFile = async (originalFile: File) => {
     try {
+        setIsUploading(true);
         // Optimize image before upload
-        console.log("Optimizing image...", originalFile.size);
         const file = await resizeImage(originalFile);
-        console.log("Optimized size:", file.size);
 
         // 1. Get Presigned URL
         const { data: presignData, error: presignError } = await api.POST("/uploads/presign", {
             body: {
                 filename: file.name,
-                contentType: file.type as "image/jpeg" | "image/png" | "image/webp",
+                contentType: file.type as any,
                 sizeBytes: file.size
             }
         });
 
-        if (presignError || !presignData) {
-            console.error("Presign failed", presignError);
-            alert("Failed to initiate upload");
-            return;
-        }
+        if (presignError || !presignData) throw new Error("Presign failed");
 
         // 2. Upload to S3 (MinIO)
-        // Backend now provides the correct correctly-signed URL for browser access.
-        const uploadUrl = presignData.uploadUrl;
-
-        const uploadRes = await fetch(uploadUrl, {
+        const uploadRes = await fetch(presignData.uploadUrl, {
             method: "PUT",
             body: file,
-            headers: {
-                "Content-Type": file.type
-            }
+            headers: { "Content-Type": file.type }
         });
 
-        if (!uploadRes.ok) {
-            const errorText = await uploadRes.text().catch(() => "No error body");
-            console.error(`Upload failed: ${uploadRes.status} ${uploadRes.statusText}`, errorText);
-            alert(`Failed to upload image: ${uploadRes.status} ${uploadRes.statusText}`);
-            return;
-        }
+        if (!uploadRes.ok) throw new Error("Upload failed");
 
         // 3. Complete Upload
-        const { error: completeError } = await api.POST("/uploads/complete", {
+        await api.POST("/uploads/complete", {
             body: { uploadId: presignData.uploadId }
         });
 
-        if (completeError) {
-             console.error("Completion failed", completeError);
-             return;
-        }
-
         // Success
-        console.log("Upload success:", presignData.uploadId);
         setFileName(file.name);
         updateData({ 
-            photoKey: "uploaded/" + file.name, // Display only
-            uploadId: presignData.uploadId // Real ID
+            photoKey: file.name, 
+            uploadId: presignData.uploadId,
+            photoPreview: presignData.imageUrl 
         }); 
 
     } catch (e) {
         console.error(e);
         alert("An error occurred during upload");
+    } finally {
+        setIsUploading(false);
     }
   };
 
   const clearFile = () => {
       setFileName(null);
-      updateData({ photoKey: undefined });
+      updateData({ photoKey: undefined, uploadId: undefined, photoPreview: undefined });
   };
 
   const onNext = () => {
@@ -175,11 +114,12 @@ export default function UploadPage() {
           relative border-2 border-dashed rounded-xl p-10 transition-all duration-200 ease-in-out
           flex flex-col items-center justify-center text-center cursor-pointer
           ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-blue-300 hover:bg-gray-50"}
+          ${isUploading ? "opacity-50 cursor-wait" : ""}
         `}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        onClick={() => document.getElementById("file-upload")?.click()}
+        onClick={() => !isUploading && document.getElementById("file-upload")?.click()}
       >
         <input
           id="file-upload"
@@ -187,21 +127,22 @@ export default function UploadPage() {
           className="hidden"
           accept="image/*"
           onChange={handleFileChange}
+          disabled={isUploading}
         />
         
-        {fileName ? (
+        {isUploading ? (
+            <div className="flex flex-col items-center animate-pulse">
+                <Loader2 className="h-12 w-12 text-emerald-500 animate-spin mb-4" />
+                <p className="text-emerald-700 font-bold">Optimizing & Uploading...</p>
+            </div>
+        ) : fileName ? (
            <div className="flex flex-col items-center animate-in fade-in zoom-in duration-300 w-full">
              <div className="relative h-48 w-full max-w-sm mb-4 rounded-xl overflow-hidden border border-emerald-100 shadow-inner bg-slate-50">
-               {data.photoKey && (
+               {data.photoPreview && (
                     <img 
-                        src={`http://localhost:9000/recipes/${data.photoKey.replace("uploaded/", "")}`}
+                        src={data.photoPreview}
                         alt="Preview"
                         className="w-full h-full object-contain"
-                        onError={(e) => {
-                            // Fallback if URL construction fails or object not public yet
-                            (e.target as any).style.display = 'none';
-                            (e.target as any).parentElement.innerHTML = '<div class="flex items-center justify-center h-full text-emerald-600"><ChefHat size={48} /></div>';
-                        }}
                     />
                )}
              </div>

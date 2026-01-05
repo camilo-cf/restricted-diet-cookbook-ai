@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { User, Camera, Loader2, Save, LogOut, ChefHat, CheckCircle2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { resizeImage } from "@/lib/image";
 
 const schema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters"),
@@ -101,7 +102,10 @@ export default function ProfilePage() {
       if (!e.target.files?.[0]) return;
       setUploading(true);
       try {
-          const file = e.target.files[0];
+          const originalFile = e.target.files[0];
+          
+          // Optimize image client-side before upload
+          const file = await resizeImage(originalFile, 800);
           
           // 1. Presign
           const { data: presignData, error: presignError } = await api.POST("/uploads/presign", {
