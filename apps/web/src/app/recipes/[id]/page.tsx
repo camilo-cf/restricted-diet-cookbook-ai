@@ -6,11 +6,10 @@ import { useParams, useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Clock, Users, Printer, Share2, ChefHat, ArrowLeft, Edit3 } from "lucide-react";
+import { Clock, Users, Printer, Share2, ChefHat, ArrowLeft, Edit3, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useWizard } from "@/context/wizard-context";
 import { useToast } from "@/components/ui/Toast";
-import { Trash2 } from "lucide-react";
 
 export default function RecipeDetail() {
   const { id } = useParams();
@@ -34,9 +33,11 @@ export default function RecipeDetail() {
 
            if (recipeRes.data) {
                setRecipe(recipeRes.data);
+           } else {
+               throw new Error("Recipe not found");
            }
            
-           if (userRes?.data) {
+           if (userRes && "data" in userRes && userRes.data) {
                setCurrentUser(userRes.data);
            }
        } catch (err) {
@@ -49,8 +50,8 @@ export default function RecipeDetail() {
     fetchData();
   }, [id]);
 
-  const canEdit = currentUser && (
-    currentUser.id === recipe?.userId || 
+  const canEdit = currentUser && recipe && (
+    currentUser.id === recipe.userId || 
     currentUser.role === "admin" || 
     currentUser.role === "maintainer" ||
     currentUser.email === "demo@example.com"
@@ -60,21 +61,41 @@ export default function RecipeDetail() {
     if (!recipe) return;
     // Load data into wizard context
     updateData({
-        ingredients: recipe.ingredients.join("\n"),
-        restrictions: recipe.dietaryTags.join(", "),
-        recipe: {
+        ingredients: (recipe.ingredients || []).join("\n"),
+        restrictions: (recipe.dietaryTags || []).join(", "),
+        generatedRecipe: {
+            id: recipe.id,
             title: recipe.title,
             description: recipe.description || "",
-            ingredients: recipe.ingredients,
-            instructions: recipe.instructions,
-            dietary_tags: recipe.dietaryTags,
-            prep_time_minutes: recipe.prepTimeMinutes,
-            cook_time_minutes: recipe.cookTimeMinutes
+            ingredients: recipe.ingredients || [],
+            instructions: recipe.instructions || [],
+            dietaryTags: recipe.dietaryTags || [],
+            prepTimeMinutes: recipe.prepTimeMinutes,
+            cookTimeMinutes: recipe.cookTimeMinutes,
+            created_at: recipe.created_at,
+            imageUrl: recipe.imageUrl,
+            userId: recipe.userId
         },
         photoPreview: recipe.imageUrl
     });
     // Redirect to wizard result page for editing
     router.push("/wizard/result");
+  };
+
+  const handleDelete = async () => {
+    if (!id || !window.confirm("Are you sure you want to delete this recipe? This action cannot be undone.")) return;
+    
+    try {
+        const { error } = await api.DELETE("/recipes/{id}", {
+            params: { path: { id: id as string } }
+        });
+        if (error) throw error;
+        toast("Recipe deleted successfully", "success");
+        router.push("/recipes");
+    } catch (err) {
+        console.error(err);
+        toast("Failed to delete recipe", "error");
+    }
   };
 
   if (loading) return <div className="flex justify-center py-20 text-emerald-600 animate-pulse font-medium">Loading recipe details...</div>;
@@ -143,12 +164,12 @@ export default function RecipeDetail() {
           <div className="bg-white p-4 rounded-xl border shadow-sm text-center">
               <Users className="w-6 h-6 mx-auto text-blue-500 mb-2" />
               <div className="text-xs text-muted-foreground uppercase font-semibold tracking-wider">Servings</div>
-              <div className="font-bold text-lg">2</div> {/* Placeholder if not in DB */}
+              <div className="font-bold text-lg">2</div>
           </div>
           <div className="bg-white p-4 rounded-xl border shadow-sm text-center">
               <ChefHat className="w-6 h-6 mx-auto text-purple-500 mb-2" />
               <div className="text-xs text-muted-foreground uppercase font-semibold tracking-wider">Difficulty</div>
-              <div className="font-bold text-lg">Medium</div> {/* Placeholder */}
+              <div className="font-bold text-lg">Medium</div>
           </div>
       </div>
 
