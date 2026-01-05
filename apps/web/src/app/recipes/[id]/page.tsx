@@ -29,10 +29,11 @@ export default function RecipeDetail() {
                api.GET("/auth/me")
            ]);
 
-           if (recipeRes.error) throw recipeRes.error;
-           setRecipe(recipeRes.data);
+           if (recipeRes.data) {
+               setRecipe(recipeRes.data);
+           }
            
-           if (userRes.data) {
+           if (userRes && "data" in userRes && userRes.data) {
                setCurrentUser(userRes.data);
            }
        } catch (err) {
