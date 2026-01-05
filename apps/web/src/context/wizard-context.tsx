@@ -59,10 +59,6 @@ export function WizardProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem(STORAGE_KEY);
   };
 
-  if (!loaded) {
-    return null; // Or a spinner
-  }
-
   return (
     <WizardContext.Provider value={{ data, updateData, reset }}>
       {children}
