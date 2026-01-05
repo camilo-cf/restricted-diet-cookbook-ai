@@ -108,10 +108,22 @@ async def update_recipe(
     """
     Update a recipe.
     """
-    result = await db.execute(select(Recipe).options(selectinload(Recipe.upload)).where(Recipe.id == id, Recipe.user_id == current_user.id))
+    # Fetch by ID first to check owner vs role
+    result = await db.execute(select(Recipe).options(selectinload(Recipe.upload)).where(Recipe.id == id))
     recipe = result.scalars().first()
     if not recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
+
+    # Permission Check: Owner, Admin, Maintainer, or Demo
+    is_owner = recipe.user_id == current_user.id
+    is_staff = current_user.role in ["admin", "maintainer"]
+    is_demo = current_user.email == "demo@example.com"
+
+    if not (is_owner or is_staff or is_demo):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Not enough permissions to edit this recipe"
+        )
     
     # Update fields
     for field in ["title", "description", "prep_time_minutes", "cook_time_minutes", "ingredients", "instructions", "dietary_tags"]:
@@ -162,10 +174,22 @@ async def delete_recipe(
     """
     Delete a recipe.
     """
-    result = await db.execute(select(Recipe).where(Recipe.id == id, Recipe.user_id == current_user.id))
+    result = await db.execute(select(Recipe).where(Recipe.id == id))
     recipe = result.scalars().first()
     if not recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
+
+    # Permission Check: Owner, Admin, or Demo (Maintainers usually can't delete?)
+    # Let's align with edit for Consistency: Owner, Admin, Maintainer, Demo
+    is_owner = recipe.user_id == current_user.id
+    is_staff = current_user.role in ["admin", "maintainer"]
+    is_demo = current_user.email == "demo@example.com"
+
+    if not (is_owner or is_staff or is_demo):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Not enough permissions to delete this recipe"
+        )
     
     await db.delete(recipe)
     await db.commit()

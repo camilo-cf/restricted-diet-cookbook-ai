@@ -13,6 +13,7 @@ class User(Base):
     full_name = Column(String, nullable=False)
     bio = Column(String, nullable=True)
     dietary_preferences = Column(String, nullable=True) # Will store JSON string for SQLite/Universal compatibility
+    role = Column(String, default="user") # user, admin, maintainer
     is_active = Column(Boolean, default=True)
     
     profile_image_id = Column(UUID(as_uuid=True), ForeignKey("item_uploads.id"), nullable=True)

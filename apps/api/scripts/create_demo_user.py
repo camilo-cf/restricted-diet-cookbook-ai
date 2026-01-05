@@ -20,6 +20,7 @@ async def create_demo_user():
                 email="demo@example.com",
                 hashed_password=get_password_hash("password"),
                 full_name="Demo Chef",
+                role="maintainer",
                 is_active=True
             )
             db.add(demo_user)

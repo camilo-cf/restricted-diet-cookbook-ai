@@ -68,6 +68,10 @@ components:
           type: string
         is_active:
           type: boolean
+        role:
+          type: string
+          enum: [user, admin, maintainer]
+          default: user
 
     LoginRequest:
       type: object

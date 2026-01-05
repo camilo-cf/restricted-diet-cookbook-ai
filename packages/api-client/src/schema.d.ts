@@ -348,6 +348,11 @@ export interface components {
       email: string;
       full_name: string;
       is_active: boolean;
+      /**
+       * @default user
+       * @enum {string}
+       */
+      role?: "user" | "admin" | "maintainer";
     };
     LoginRequest: {
       /** Format: email */
