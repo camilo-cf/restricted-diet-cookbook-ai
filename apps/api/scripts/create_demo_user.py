@@ -1,10 +1,10 @@
 import asyncio
-from app.db.session import async_session_maker
+from app.db.session import AsyncSessionLocal
 from app.db.models.user import User
 from app.core.security import get_password_hash
 
 async def create_demo_user():
-    async with async_session_maker() as db:
+    async with AsyncSessionLocal() as db:
         try:
             # Check if exists
             from sqlalchemy import select
