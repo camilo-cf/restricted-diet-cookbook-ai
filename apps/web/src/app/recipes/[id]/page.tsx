@@ -54,7 +54,7 @@ export default function RecipeDetail() {
                 <img 
                     src={recipe.imageUrl} 
                     alt={recipe.title} 
-                    className="w-full h-full object-cover transition-transform hover:scale-105 duration-700"
+                    className="w-full h-full object-contain transition-transform hover:scale-105 duration-700"
                 />
             </div>
         )}

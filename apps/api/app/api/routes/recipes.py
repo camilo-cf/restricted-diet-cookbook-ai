@@ -27,6 +27,7 @@ class RecipeResponse(BaseModel):
     calories: Optional[int] = None
     created_at: datetime
     imageUrl: Optional[str] = None
+    userId: UUID
 
     class Config:
         from_attributes = True
