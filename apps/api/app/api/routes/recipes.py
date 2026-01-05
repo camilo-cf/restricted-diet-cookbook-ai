@@ -51,7 +51,8 @@ def to_recipe_response(recipe: Recipe) -> RecipeResponse:
         cookTimeMinutes=recipe.cook_time_minutes,
         calories=None, # Not in DB yet
         created_at=recipe.created_at,
-        imageUrl=image_url
+        imageUrl=image_url,
+        userId=recipe.user_id
     )
 
 @router.get("", response_model=Any) # Should be List[RecipeResponse]

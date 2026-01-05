@@ -2,28 +2,39 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Clock, Users, Printer, Share2, ChefHat, ArrowLeft } from "lucide-react";
+import { Clock, Users, Printer, Share2, ChefHat, ArrowLeft, Edit3 } from "lucide-react";
 import Link from "next/link";
+import { useWizard } from "@/context/wizard-context";
 
 export default function RecipeDetail() {
   const { id } = useParams();
+  const router = useRouter();
+  const { updateData } = useWizard();
   const [recipe, setRecipe] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    async function fetchRecipe() {
+    async function fetchData() {
        if (!id) return;
        try {
-           const { data, error } = await api.GET("/recipes/{id}", {
-               params: { path: { id: id as string } }
-           });
-           if (error) throw error;
-           setRecipe(data);
+           // Parallel fetch for speed
+           const [recipeRes, userRes] = await Promise.all([
+               api.GET("/recipes/{id}", { params: { path: { id: id as string } } }),
+               api.GET("/auth/me")
+           ]);
+
+           if (recipeRes.error) throw recipeRes.error;
+           setRecipe(recipeRes.data);
+           
+           if (userRes.data) {
+               setCurrentUser(userRes.data);
+           }
        } catch (err) {
            console.error(err);
            setError(true);
@@ -31,37 +42,76 @@ export default function RecipeDetail() {
            setLoading(false);
        }
     }
-    fetchRecipe();
+    fetchData();
   }, [id]);
 
-  if (loading) return <div className="flex justify-center py-20">Loading...</div>;
+  const canEdit = currentUser && (
+    currentUser.id === recipe?.userId || 
+    currentUser.role === "admin" || 
+    currentUser.role === "maintainer" ||
+    currentUser.email === "demo@example.com"
+  );
+
+  const handleEdit = () => {
+    if (!recipe) return;
+    // Load data into wizard context
+    updateData({
+        ingredients: recipe.ingredients.join("\n"),
+        restrictions: recipe.dietaryTags.join(", "),
+        recipe: {
+            title: recipe.title,
+            description: recipe.description || "",
+            ingredients: recipe.ingredients,
+            instructions: recipe.instructions,
+            dietary_tags: recipe.dietaryTags,
+            prep_time_minutes: recipe.prepTimeMinutes,
+            cook_time_minutes: recipe.cookTimeMinutes
+        },
+        photoPreview: recipe.imageUrl
+    });
+    // Redirect to wizard result page for editing
+    router.push("/wizard/result");
+  };
+
+  if (loading) return <div className="flex justify-center py-20 text-emerald-600 animate-pulse font-medium">Loading recipe details...</div>;
   if (error || !recipe) return (
-      <div className="text-center py-20">
-          <h2 className="text-xl font-bold mb-4">Recipe Not Found</h2>
-          <Link href="/recipes" className="text-primary hover:underline">Back to Explorer</Link>
+      <div className="text-center py-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <h2 className="text-2xl font-bold mb-4 text-gray-800">Recipe Not Found</h2>
+          <p className="text-muted-foreground mb-8">It might have been removed or the link is incorrect.</p>
+          <Link href="/recipes" className="text-emerald-600 hover:text-emerald-700 font-semibold hover:underline flex items-center justify-center gap-2">
+              <ArrowLeft size={18}/> Back to Explorer
+          </Link>
       </div>
   );
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-12 animate-in fade-in duration-500">
-      <Link href="/recipes" className="inline-flex items-center text-sm font-medium text-emerald-600 hover:text-emerald-700 mb-8 group transition-colors">
-          <ArrowLeft size={18} className="mr-2 transition-transform group-hover:-translate-x-1"/> Back to Recipes
-      </Link>
+      <div className="flex justify-between items-center mb-8">
+        <Link href="/recipes" className="inline-flex items-center text-sm font-medium text-emerald-600 hover:text-emerald-700 group transition-colors">
+            <ArrowLeft size={18} className="mr-2 transition-transform group-hover:-translate-x-1"/> Back to Recipes
+        </Link>
+        
+        {canEdit && (
+            <Button onClick={handleEdit} className="bg-amber-500 hover:bg-amber-600 shadow-md hover:shadow-lg transition-all gap-2">
+                <Edit3 size={18} /> Edit Recipe
+            </Button>
+        )}
+      </div>
 
       <div className="text-center space-y-4 mb-10">
         {recipe.imageUrl && (
-            <div className="w-full h-64 md:h-96 relative mb-8 rounded-2xl overflow-hidden shadow-lg border border-gray-100 mx-auto max-w-2xl bg-gray-50">
+            <div className="w-full h-64 md:h-96 relative mb-8 rounded-2xl overflow-hidden shadow-xl border border-gray-100 mx-auto max-w-2xl bg-gray-50 flex items-center justify-center">
                 <img 
                     src={recipe.imageUrl} 
                     alt={recipe.title} 
-                    className="w-full h-full object-contain transition-transform hover:scale-105 duration-700"
+                    className="max-w-full max-h-full object-contain transition-transform hover:scale-105 duration-700"
                 />
             </div>
         )}
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight">{recipe.title}</h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">{recipe.description}</p>
         
-        <div className="flex justify-center gap-2 pt-2">
+        <div className="flex justify-center gap-2 pt-2 flex-wrap">
             {(recipe.dietaryTags || []).map((tag: string) => (
                 <Badge key={tag} variant="secondary" className="text-sm px-3 py-1 bg-amber-50 text-amber-800 border-amber-100">
                     {tag}

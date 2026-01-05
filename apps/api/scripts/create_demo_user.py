@@ -13,7 +13,9 @@ async def create_demo_user():
             existing = result.scalars().first()
             
             if existing:
-                print("Demo user already exists.")
+                existing.role = "maintainer"
+                await db.commit()
+                print("Demo user already exists, ensuring role is maintainer.")
                 return
 
             demo_user = User(
