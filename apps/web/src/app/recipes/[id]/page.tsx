@@ -33,7 +33,7 @@ export default function RecipeDetail() {
                setRecipe(recipeRes.data);
            }
            
-           if (userRes && "data" in userRes && userRes.data) {
+           if (userRes?.data) {
                setCurrentUser(userRes.data);
            }
        } catch (err) {
