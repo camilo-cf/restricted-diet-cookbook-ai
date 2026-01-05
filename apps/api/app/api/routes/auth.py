@@ -43,8 +43,8 @@ class UserProfileUpdate(BaseModel):
 def to_user_response(user: User) -> UserResponse:
     profile_url = None
     if user.profile_image:
-        # Standard local MinIO endpoint
-        base_url = "http://localhost:9000"
+        # Use PUBLIC_AWS_ENDPOINT_URL for browser-accessible links
+        base_url = settings.PUBLIC_AWS_ENDPOINT_URL or settings.AWS_ENDPOINT_URL
         profile_url = f"{base_url}/{settings.AWS_BUCKET_NAME}/{user.profile_image.object_key}"
     
     prefs = []

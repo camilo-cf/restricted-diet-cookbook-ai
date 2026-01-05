@@ -122,7 +122,14 @@ Ensure your `.env` file contains production-ready secrets:
 * `DATABASE_URL`: Point to a persistent RDS/Postgres instance.
 * `SECRET_KEY`: Generate a long, random alphanumeric string.
 * `OPENAI_API_KEY`: Ensure billing is active.
-* `AWS_ENDPOINT_URL`: If using AWS S3 instead of MinIO, update to the regional endpoint.
+* `AWS_ENDPOINT_URL`: (Internal) The address the backend uses to talk to storage (e.g. `http://minio:9000`).
+* `PUBLIC_AWS_ENDPOINT_URL`: (External) The address the browser uses to upload images (e.g. `https://storage.yourdomain.com`).
+* `CORS_ORIGINS`: List of frontend domains allowed to access the API.
+
+### New Features (v1.1)
+- **User Management**: Registration, profile customization, and dietary preferences.
+- **Show Your Dish**: Capability to upload photos of final cooked meals.
+- **Enhanced Storage**: Robust S3 signature handling for public access.
 
 ### 3. CI/CD Pipeline
 The repository includes GitHub Actions for:

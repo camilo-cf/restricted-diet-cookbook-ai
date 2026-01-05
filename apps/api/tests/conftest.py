@@ -33,9 +33,14 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
         await conn.run_sync(Base.metadata.drop_all)
 
 @pytest_asyncio.fixture(scope="function")
-async def client(db_session: AsyncSession):
+async def db(db_session: AsyncSession):
+    """Shorthand for db_session"""
+    yield db_session
+
+@pytest_asyncio.fixture(scope="function")
+async def client(db: AsyncSession):
     async def override_get_db():
-        yield db_session
+        yield db
 
     app.dependency_overrides[get_db] = override_get_db
     
@@ -43,3 +48,18 @@ async def client(db_session: AsyncSession):
         yield c
     
     app.dependency_overrides.clear()
+
+@pytest_asyncio.fixture(scope="function")
+async def client_with_auth(client: AsyncClient):
+    """Returns an authenticated client for testing protected routes"""
+    # 1. Register
+    await client.post("/auth/register", json={
+        "username": "auth_user@example.com",
+        "password": "testpassword"
+    })
+    # 2. Login (to set session cookie)
+    await client.post("/auth/login", json={
+        "username": "auth_user@example.com",
+        "password": "testpassword"
+    })
+    return client

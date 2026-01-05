@@ -73,6 +73,17 @@ export function Navbar() {
                                 {user.full_name}
                             </span>
                         </Link>
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-slate-500 hover:text-red-600 px-2"
+                            onClick={async () => {
+                                await api.POST("/auth/logout");
+                                window.location.href = "/";
+                            }}
+                        >
+                            <LogOut size={18} />
+                        </Button>
                       </div>
                   ) : (
                       <div className="flex items-center gap-2">
@@ -120,13 +131,25 @@ export function Navbar() {
               <PlusCircle size={16} /> Create Recipe
             </Link>
             {user ? (
-                <Link 
-                    href="/profile" 
-                    className={linkClass("/profile") + " w-full"}
-                    onClick={() => setIsOpen(false)}
-                >
-                    <UserCircle size={16} /> My Profile
-                </Link>
+                <>
+                    <Link 
+                        href="/profile" 
+                        className={linkClass("/profile") + " w-full"}
+                        onClick={() => setIsOpen(false)}
+                    >
+                        <UserCircle size={16} /> My Profile
+                    </Link>
+                    <button 
+                        className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 w-full text-left"
+                        onClick={async () => {
+                            await api.POST("/auth/logout");
+                            window.location.href = "/";
+                            setIsOpen(false);
+                        }}
+                    >
+                        <LogOut size={16} /> Log Out
+                    </button>
+                </>
             ) : (
                 <>
                     <Link 
