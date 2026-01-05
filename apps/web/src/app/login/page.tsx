@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Leaf } from "lucide-react";
 
 const schema = z.object({
   email: z.string().email("Invalid email address"),
@@ -42,9 +44,8 @@ export default function LoginPage() {
         return;
       }
 
-      // Successful login
       router.push("/wizard");
-      router.refresh(); // Refresh to update middleware/server state
+      router.refresh(); 
     } catch (err) {
       setError("An unexpected error occurred");
       console.error(err);
@@ -52,76 +53,77 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8 rounded-xl bg-white p-10 shadow-lg">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-            Sign in to your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or use the demo account: <span className="font-mono">demo@example.com / password</span>
-          </p>
+    <div className="flex min-h-screen items-center justify-center bg-gray-50/50 p-4">
+      <div className="w-full max-w-md animate-in slide-up">
+        <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-full mb-4 text-primary">
+                <Leaf size={24} />
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Welcome Back</h1>
+            <p className="text-muted-foreground mt-2">Sign in to continue your cooking journey</p>
         </div>
-        
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
-              <div className="mt-1">
+
+        <Card className="shadow-xl shadow-primary/5 border-primary/10">
+          <CardHeader>
+            <CardTitle>Sign In</CardTitle>
+            <CardDescription>
+              Use demo@example.com / password for easy access.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="email">
+                  Email
+                </label>
                 <Input
                   id="email"
                   type="email"
-                  autoComplete="email"
+                  placeholder="name@example.com"
                   {...register("email")}
-                  className={errors.email ? "border-red-500" : ""}
+                  className={errors.email ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
                 {errors.email && (
-                  <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>
+                  <p className="text-sm text-destructive">{errors.email.message}</p>
                 )}
               </div>
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <div className="mt-1">
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="password">
+                  Password
+                </label>
                 <Input
                   id="password"
                   type="password"
-                  autoComplete="current-password"
                   {...register("password")}
-                  className={errors.password ? "border-red-500" : ""}
+                  className={errors.password ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
                 {errors.password && (
-                  <p className="mt-1 text-sm text-red-500">{errors.password.message}</p>
+                  <p className="text-sm text-destructive">{errors.password.message}</p>
                 )}
               </div>
-            </div>
-          </div>
 
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="flex">
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">{error}</h3>
+              {error && (
+                <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+                  {error}
                 </div>
-              </div>
-            </div>
-          )}
+              )}
 
-          <div>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="group relative flex w-full justify-center"
-            >
-              {isSubmitting ? "Signing in..." : "Sign in"}
-            </Button>
-          </div>
-        </form>
+              <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full"
+                  size="lg"
+                >
+                  {isSubmitting ? "Signing in..." : "Sign in"}
+              </Button>
+            </form>
+          </CardContent>
+          <CardFooter className="flex justify-center border-t bg-muted/50 p-4">
+            <p className="text-xs text-muted-foreground">
+                Don&apos;t have an account? <span className="text-primary cursor-pointer hover:underline">Sign up</span>
+            </p>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   );
