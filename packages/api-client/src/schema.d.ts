@@ -146,6 +146,8 @@ export interface paths {
         query?: {
           /** @description Pagination cursor */
           cursor?: string;
+          /** @description Search query text */
+          q?: string;
           limit?: number;
           restrictions?: components["schemas"]["DietaryRestriction"][];
         };

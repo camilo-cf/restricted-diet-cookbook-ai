@@ -50,6 +50,13 @@ export default function Home() {
           <Sparkles size={20} />
           Create Recipe
         </Link>
+        
+        <Link
+          href="/recipes"
+          className="ml-4 inline-flex items-center gap-2 bg-white text-gray-700 border border-gray-200 px-8 py-4 rounded-full text-lg font-semibold hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
+        >
+          Browse Community
+        </Link>
       </section>
 
       {/* Features Section */}

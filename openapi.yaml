@@ -377,6 +377,11 @@ paths:
           schema:
             type: string
           description: Pagination cursor
+        - name: q
+          in: query
+          schema:
+            type: string
+          description: Search query text
         - name: limit
           in: query
           schema:
