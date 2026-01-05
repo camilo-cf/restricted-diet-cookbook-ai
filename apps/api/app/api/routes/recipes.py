@@ -1,16 +1,60 @@
 from typing import Any, List, Optional
 from uuid import UUID
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_
+from sqlalchemy.orm import selectinload
+from pydantic import BaseModel
 
 from app.api.deps_auth import get_db, get_current_user
 from app.db.models.recipe import Recipe
 from app.db.models.user import User
+from app.core.config import settings
 
 router = APIRouter()
 
-@router.get("", response_model=None)
+# --- Response Model ---
+class RecipeResponse(BaseModel):
+    id: UUID
+    title: str
+    description: Optional[str] = None
+    ingredients: List[str]
+    instructions: List[str]
+    dietaryTags: List[str] = []
+    prepTimeMinutes: Optional[int] = None
+    cookTimeMinutes: Optional[int] = None
+    calories: Optional[int] = None
+    created_at: datetime
+    imageUrl: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+# Helper to map DB model to Response
+def to_recipe_response(recipe: Recipe) -> RecipeResponse:
+    image_url = None
+    if recipe.upload:
+        # Assuming public bucket on localhost:9000 for MVP
+        # Ideally use a configured PUBLIC_S3_URL
+        base_url = "http://localhost:9000" 
+        image_url = f"{base_url}/{settings.AWS_BUCKET_NAME}/{recipe.upload.object_key}"
+    
+    return RecipeResponse(
+        id=recipe.id,
+        title=recipe.title,
+        description=recipe.description,
+        ingredients=recipe.ingredients or [],
+        instructions=recipe.instructions or [],
+        dietaryTags=recipe.dietary_tags or [],
+        prepTimeMinutes=recipe.prep_time_minutes,
+        cookTimeMinutes=recipe.cook_time_minutes,
+        calories=None, # Not in DB yet
+        created_at=recipe.created_at,
+        imageUrl=image_url
+    )
+
+@router.get("", response_model=Any) # Should be List[RecipeResponse]
 async def get_recipes(
     db: AsyncSession = Depends(get_db),
     skip: int = 0,
@@ -20,7 +64,7 @@ async def get_recipes(
     """
     List public recipes with search.
     """
-    query = select(Recipe)
+    query = select(Recipe).options(selectinload(Recipe.upload))
     
     if q:
         query = query.where(
@@ -36,9 +80,11 @@ async def get_recipes(
     result = await db.execute(query)
     recipes = result.scalars().all()
     
-    return {"data": recipes, "hasMore": len(recipes) == limit}
+    data = [to_recipe_response(r) for r in recipes]
+    
+    return {"data": data, "hasMore": len(recipes) == limit}
 
-@router.get("/{id}", response_model=None)
+@router.get("/{id}", response_model=RecipeResponse)
 async def read_recipe(
     id: UUID,
     db: AsyncSession = Depends(get_db),
@@ -47,13 +93,13 @@ async def read_recipe(
     """
     Get recipe by ID. Public.
     """
-    result = await db.execute(select(Recipe).where(Recipe.id == id))
+    result = await db.execute(select(Recipe).options(selectinload(Recipe.upload)).where(Recipe.id == id))
     recipe = result.scalars().first()
     if not recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
-    return recipe
+    return to_recipe_response(recipe)
 
-@router.patch("/{id}", response_model=None)
+@router.patch("/{id}", response_model=RecipeResponse)
 async def update_recipe(
     id: UUID,
     recipe_in: dict, # Receiving a dict for flexibility, normally would use a Pydantic schema
@@ -63,7 +109,7 @@ async def update_recipe(
     """
     Update a recipe.
     """
-    result = await db.execute(select(Recipe).where(Recipe.id == id, Recipe.user_id == current_user.id))
+    result = await db.execute(select(Recipe).options(selectinload(Recipe.upload)).where(Recipe.id == id, Recipe.user_id == current_user.id))
     recipe = result.scalars().first()
     if not recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
@@ -71,11 +117,6 @@ async def update_recipe(
     # Update fields
     for field in ["title", "description", "prep_time_minutes", "cook_time_minutes", "ingredients", "instructions", "dietary_tags"]:
         if field in recipe_in:
-             # handle snake_case vs camelCase mismatch if necessary, 
-             # but frontend usually sends JSON matching the API schema.
-             # API Schema (Pydantic) usually maps snake_case.
-             # User says backend returns snake_case. 
-             # Let's support both or assume matching model attributes.
              val = recipe_in[field]
              setattr(recipe, field, val)
 
@@ -90,7 +131,19 @@ async def update_recipe(
     db.add(recipe)
     await db.commit()
     await db.refresh(recipe)
-    return recipe
+    
+    # Refresh upload relation for response
+    # (Though update rarely changes upload currently, but needed for response)
+    # We can just use the existing eager loaded 'recipe.upload' if it wasn't changed
+    # Or reload. simpler to rely on lazy load triggers if not detached? 
+    # But usage of 'to_recipe_response' accesses it.
+    # SA Async requires explicit loading.
+    # Let's re-fetch or assume it's loaded. 'refresh' might clear relationships?
+    # Safe bet: re-fetch.
+    result = await db.execute(select(Recipe).options(selectinload(Recipe.upload)).where(Recipe.id == recipe.id))
+    recipe = result.scalars().first()
+
+    return to_recipe_response(recipe)
 
 @router.delete("/{id}")
 async def delete_recipe(

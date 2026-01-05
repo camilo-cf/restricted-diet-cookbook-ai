@@ -156,6 +156,10 @@ components:
           type: integer
         created_at:
           $ref: '#/components/schemas/Timestamp'
+        imageUrl:
+          type: string
+          format: uri
+          nullable: true
 
     RecipeList:
       type: object

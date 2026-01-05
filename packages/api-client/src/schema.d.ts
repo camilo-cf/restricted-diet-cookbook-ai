@@ -387,6 +387,8 @@ export interface components {
       cookTimeMinutes?: number;
       calories?: number;
       created_at: components["schemas"]["Timestamp"];
+      /** Format: uri */
+      imageUrl?: string | null;
     };
     RecipeList: {
       data: components["schemas"]["Recipe"][];

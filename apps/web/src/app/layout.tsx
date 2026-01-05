@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: "Generate personalized recipes for restricted diets.",
 };
 
+import { Navbar } from "@/components/navbar";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -19,6 +21,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <GlobalErrorBanner />
+        <Navbar />
         <main className="min-h-screen bg-background text-foreground">
           {children}
         </main>

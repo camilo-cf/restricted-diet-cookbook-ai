@@ -13,26 +13,26 @@
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
 
-    --primary: 158 64% 52%; /* Emerald 500 */
-    --primary-foreground: 144 91% 100%;
+    --primary: 161 72% 43%; /* Vibrant Emerald */
+    --primary-foreground: 161 72% 98%;
 
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
 
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 38 92% 50%; /* Amber 500 */
-    --accent-foreground: 240 5.9% 10%;
+    --accent: 199 89% 48%; /* Sky Blue for subtle accents */
+    --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 158 64% 52%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 161 72% 43%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
   }
 }
 
@@ -41,11 +41,15 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-[#f8fafc] text-foreground antialiased;
   }
 }
 
 @layer utilities {
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-sm;
+  }
+  
   .animate-in {
     animation: animate-in 0.5s ease-out forwards;
   }

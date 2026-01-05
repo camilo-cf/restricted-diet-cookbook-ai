@@ -2,8 +2,8 @@ from datetime import datetime
 from typing import List, Optional
 from uuid import uuid4
 
-from sqlalchemy import String, ForeignKey, Integer, DateTime
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import String, ForeignKey, Integer, DateTime, JSON
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base_class import Base
@@ -18,10 +18,10 @@ class Recipe(Base):
     title: Mapped[str] = mapped_column(String, index=True)
     description: Mapped[str] = mapped_column(String)
     
-    # Store lists as JSONB
-    ingredients: Mapped[List[str]] = mapped_column(JSONB, default=list)
-    instructions: Mapped[List[str]] = mapped_column(JSONB, default=list)
-    dietary_tags: Mapped[List[str]] = mapped_column(JSONB, default=list)
+    # Store lists as JSON
+    ingredients: Mapped[List[str]] = mapped_column(JSON, default=list)
+    instructions: Mapped[List[str]] = mapped_column(JSON, default=list)
+    dietary_tags: Mapped[List[str]] = mapped_column(JSON, default=list)
     
     prep_time_minutes: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     cook_time_minutes: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)

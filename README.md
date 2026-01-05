@@ -107,19 +107,32 @@ This is not just a wrapper; it's an engineered AI service. See [prompts/AGENT_SY
 
 ---
 
-## ☁️ Deployment (Render)
-**Infrastructure as Code**: defined in `render.yaml`.
+## 🛳️ Production Deployment
 
-1.  **Fork/Clone** this repo to your GitHub.
-2.  **Connect to Render**: Create a "Blueprint" service and select this repo.
-3.  **Scale**: Auto-scaling configuration is in `render.yaml`.
-4.  **Monitoring**:
-    *   **Health**: `/health` endpoint configured in Render probes.
-    *   **Rollback**: Use Render Dashboard "Rollback" feature to revert to the last stable Docker image.
+For a robust production environment, we recommend using Docker with a process manager or orchestrator.
 
-See [docs/OPERATIONS.md](docs/OPERATIONS.md) for detailed Ops manual.
+### 1. Build and Run (Docker)
+```bash
+# Build production images and start in detached mode
+docker compose -f docker-compose.yml up --build -d
+```
+
+### 2. Environment Configuration
+Ensure your `.env` file contains production-ready secrets:
+* `DATABASE_URL`: Point to a persistent RDS/Postgres instance.
+* `SECRET_KEY`: Generate a long, random alphanumeric string.
+* `OPENAI_API_KEY`: Ensure billing is active.
+* `AWS_ENDPOINT_URL`: If using AWS S3 instead of MinIO, update to the regional endpoint.
+
+### 3. CI/CD Pipeline
+The repository includes GitHub Actions for:
+* **Linting & Type Checking**: On every pull request.
+* **Test Suite Execution**: Ensures no regressions before merge.
+* **OpenAPI Client Check**: Validates that the frontend client is in sync with the backend.
 
 ---
+
+## ☁️ Deployment (Render)
 
 ## 🔧 Troubleshooting
 

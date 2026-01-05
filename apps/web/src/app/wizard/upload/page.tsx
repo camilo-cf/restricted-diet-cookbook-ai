@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 import { useWizard } from "@/context/wizard-context";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -39,13 +40,61 @@ export default function UploadPage() {
     }
   };
 
-  const handleFile = async (file: File) => {
-    // 1. Get Presigned URL
+  // Helper to resize image client-side
+  const resizeImage = (file: File, maxDim = 1200): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const img = document.createElement("img");
+      img.src = URL.createObjectURL(file);
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        
+        // Calculate new dimensions
+        if (width > height) {
+           if (width > maxDim) {
+               height = Math.round(height * (maxDim / width));
+               width = maxDim;
+           }
+        } else {
+           if (height > maxDim) {
+               width = Math.round(width * (maxDim / height));
+               height = maxDim;
+           }
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return reject("Canvas context unavailable");
+        
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        canvas.toBlob((blob) => {
+            if (!blob) return reject("Blob creation failed");
+            const resizedFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
+                type: "image/jpeg",
+                lastModified: Date.now(),
+            });
+            resolve(resizedFile);
+        }, "image/jpeg", 0.8); // 80% quality JPEG
+      };
+      img.onerror = (err) => reject("Image load failed");
+    });
+  };
+
+  const handleFile = async (originalFile: File) => {
     try {
+        // Optimize image before upload
+        console.log("Optimizing image...", originalFile.size);
+        const file = await resizeImage(originalFile);
+        console.log("Optimized size:", file.size);
+
+        // 1. Get Presigned URL
         const { data: presignData, error: presignError } = await api.POST("/uploads/presign", {
             body: {
                 filename: file.name,
-                contentType: file.type,
+                contentType: file.type as "image/jpeg" | "image/png" | "image/webp",
                 sizeBytes: file.size
             }
         });
@@ -57,7 +106,6 @@ export default function UploadPage() {
         }
 
         // 2. Upload to S3 (MinIO)
-        // Note: prevent default headers causing CORS issues on PUT
         const uploadRes = await fetch(presignData.uploadUrl, {
             method: "PUT",
             body: file,
@@ -157,7 +205,7 @@ export default function UploadPage() {
                     Click to upload or drag and drop
                 </p>
                 <p className="text-xs text-gray-500">
-                    SVG, PNG, JPG or GIF (max. 800x400px)
+                    JPG, PNG or WEBP (optimized automatically)
                 </p>
             </>
         )}

@@ -44,11 +44,20 @@ export default function RecipeDetail() {
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-12 animate-in fade-in duration-500">
-      <Link href="/recipes" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-8">
-          <ArrowLeft size={16} className="mr-1"/> Back to Recipes
+      <Link href="/recipes" className="inline-flex items-center text-sm font-medium text-emerald-600 hover:text-emerald-700 mb-8 group transition-colors">
+          <ArrowLeft size={18} className="mr-2 transition-transform group-hover:-translate-x-1"/> Back to Recipes
       </Link>
 
       <div className="text-center space-y-4 mb-10">
+        {recipe.imageUrl && (
+            <div className="w-full h-64 md:h-96 relative mb-8 rounded-2xl overflow-hidden shadow-lg border border-gray-100 mx-auto max-w-2xl bg-gray-50">
+                <img 
+                    src={recipe.imageUrl} 
+                    alt={recipe.title} 
+                    className="w-full h-full object-cover transition-transform hover:scale-105 duration-700"
+                />
+            </div>
+        )}
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight">{recipe.title}</h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">{recipe.description}</p>
         

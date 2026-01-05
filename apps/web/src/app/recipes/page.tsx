@@ -50,17 +50,17 @@ export default function RecipeExplorer() {
         <h1 className="text-4xl font-bold tracking-tight">Community Recipes</h1>
         <p className="text-muted-foreground">Discover recipes created by our AI and refined by humans.</p>
         
-        <form onSubmit={handleSearch} className="max-w-md mx-auto flex gap-2">
-            <div className="relative flex-1">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+        <form onSubmit={handleSearch} className="max-w-md mx-auto flex gap-3">
+            <div className="relative flex-1 group">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-emerald-500 group-focus-within:text-emerald-600 transition-colors" />
                 <Input 
                     placeholder="Search by keyword..." 
                     value={query} 
                     onChange={e => setQuery(e.target.value)}
-                    className="pl-9"
+                    className="pl-9 h-11 rounded-xl border-emerald-100 bg-white/50 backdrop-blur-sm focus:ring-emerald-500"
                 />
             </div>
-            <Button type="submit">Search</Button>
+            <Button type="submit" className="h-11 px-6 rounded-xl hover:scale-105 transition-transform">Search</Button>
         </form>
       </div>
 
@@ -70,10 +70,19 @@ export default function RecipeExplorer() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {recipes.map((recipe) => (
                 <Link key={recipe.id} href={`/recipes/${recipe.id}`} className="block group">
-                    <Card className="h-full overflow-hidden hover:shadow-lg transition-shadow border-gray-200">
-                        <div className="h-40 bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center p-6">
-                             {/* Placeholder generic image/icon if no image yet */}
-                             <ChefHat size={48} className="text-emerald-200 group-hover:text-emerald-300 transition-colors" />
+                    <Card className="h-full overflow-hidden hover:shadow-lg transition-all duration-300 border-gray-200 group">
+                        <div className="h-48 overflow-hidden bg-gray-100 flex items-center justify-center relative">
+                             {recipe.imageUrl ? (
+                                <img 
+                                    src={recipe.imageUrl} 
+                                    alt={recipe.title} 
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                />
+                             ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center">
+                                    <ChefHat size={48} className="text-emerald-200 group-hover:text-emerald-300 transition-colors" />
+                                </div>
+                             )}
                         </div>
                         <CardHeader className="pb-2">
                              <div className="flex gap-2 mb-2 flex-wrap">
