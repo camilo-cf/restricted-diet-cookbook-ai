@@ -22,10 +22,15 @@ export function Navbar() {
         <div className="flex justify-between h-16">
           <div className="flex">
             <Link href="/" className="flex-shrink-0 flex items-center gap-2 group">
-               <div className="bg-emerald-600 text-white p-2 rounded-xl transition-transform group-hover:scale-110 duration-300">
+               <div className="bg-emerald-600 text-white p-2 rounded-xl transition-transform group-hover:scale-110 duration-300 shadow-lg shadow-emerald-500/20">
                   <ChefHat size={22} />
                </div>
-               <span className="font-bold text-xl text-gray-900 hidden sm:block tracking-tight italic">Cookbook<span className="text-emerald-600 not-italic">AI</span></span>
+               <span className="font-bold text-xl text-gray-900 hidden lg:block tracking-tight font-brand">
+                  Restricted Diet <span className="text-emerald-600">Cookbook AI</span>
+               </span>
+               <span className="font-bold text-xl text-gray-900 hidden sm:block lg:hidden tracking-tight font-brand">
+                  Cookbook <span className="text-emerald-600">AI</span>
+               </span>
             </Link>
             <div className="hidden sm:ml-8 sm:flex sm:space-x-4 items-center">
                <Link href="/recipes" className={linkClass("/recipes")}>

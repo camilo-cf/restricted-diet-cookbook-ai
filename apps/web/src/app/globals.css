@@ -41,11 +41,21 @@
     @apply border-border;
   }
   body {
-    @apply bg-[#f8fafc] text-foreground antialiased;
+    @apply bg-[#f8fafc] text-foreground antialiased font-sans;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-brand;
   }
 }
 
 @layer utilities {
+  .font-sans {
+    font-family: var(--font-inter), sans-serif;
+  }
+  .font-brand {
+    font-family: var(--font-outfit), sans-serif;
+  }
+
   .glass {
     @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-sm;
   }
