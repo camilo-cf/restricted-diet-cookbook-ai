@@ -25,7 +25,7 @@ export default function ResultPage() {
   };
 
   // Mock recipe if none exists (for testing flow without actual API yet)
-  const recipe = data.generatedRecipe || {
+  const recipe = (data.generatedRecipe || {
     id: "mock-id",
     title: "Eco-Friendly Spinach & Cream Pasta",
     description: "A delicious, creamy pasta dish that makes perfect use of your spinach and heavy cream. Keto-friendly adjustments included.",
@@ -49,7 +49,7 @@ export default function ResultPage() {
     ],
     dietaryTags: ["Keto", "Gluten-Free"],
     created_at: new Date().toISOString()
-  };
+  }) as any;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
