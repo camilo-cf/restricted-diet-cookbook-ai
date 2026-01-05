@@ -331,6 +331,10 @@ export interface paths {
       };
     };
   };
+  "/ai/recipe": {
+    /** Generate Recipe with AI */
+    post: operations["generateRecipe"];
+  };
 }
 
 export type webhooks = Record<string, never>;
@@ -432,7 +436,7 @@ export interface components {
       ingredients: string[];
       /** @description Raw text or steps */
       instruction_text: string;
-      dietary_tags: components["schemas"]["DietaryRestriction"][];
+      dietary_tags: string[];
     };
     IngredientAdd: {
       name: string;
@@ -481,6 +485,34 @@ export interface operations {
         content: {
           "application/problem+json": components["schemas"]["Problem"];
         };
+      };
+    };
+  };
+  /** Generate Recipe with AI */
+  generateRecipe: {
+    requestBody: {
+      content: {
+        "application/json": {
+          ingredients?: string[];
+          restrictions?: string[];
+          uploadId?: components["schemas"]["Uuid"];
+        };
+      };
+    };
+    responses: {
+      /** @description Recipe generated */
+      200: {
+        content: {
+          "application/json": components["schemas"]["Recipe"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        content: never;
+      };
+      /** @description Cost limit exceeded */
+      402: {
+        content: never;
       };
     };
   };

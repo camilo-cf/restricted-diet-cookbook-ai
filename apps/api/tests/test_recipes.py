@@ -102,6 +102,30 @@ async def test_recipe_rbac(client: AsyncClient, db: AsyncSession):
     assert del_maint.status_code == 204
 
 @pytest.mark.asyncio
+async def test_recipe_deletion_rbac_forbidden(client: AsyncClient, db: AsyncSession):
+    # Setup: Create User 1 (Owner) and User 2 (Attacker)
+    u1_email = f"owner_{uuid.uuid4().hex[:6]}@example.com"
+    u2_email = f"attacker_{uuid.uuid4().hex[:6]}@example.com"
+    
+    await client.post("/auth/register", json={"username": u1_email, "password": "password123"})
+    await client.post("/auth/register", json={"username": u2_email, "password": "password123"})
+    
+    # Login as User 1 to create recipe
+    await client.post("/auth/login", json={"username": u1_email, "password": "password123"})
+    res = await client.post("/recipes", json={"title": "My Secret Recipe", "ingredients": ["apple"], "instruction_text": "eat it", "dietary_tags": []})
+    recipe_id = res.json()["id"]
+    await client.post("/auth/logout")
+    
+    # Login as User 2 and try to delete User 1's recipe
+    await client.post("/auth/login", json={"username": u2_email, "password": "password123"})
+    res_del = await client.delete(f"/recipes/{recipe_id}")
+    assert res_del.status_code == 403 # Forbidden
+    
+    # Verify recipe still exists
+    res_get = await client.get(f"/recipes/{recipe_id}")
+    assert res_get.status_code == 200
+
+@pytest.mark.asyncio
 async def test_recipe_validation(client_with_auth: AsyncClient):
     # Test missing fields
     bad_data = {"title": "No ingredients"}

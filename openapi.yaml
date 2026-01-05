@@ -203,7 +203,7 @@ components:
         dietary_tags:
           type: array
           items:
-            $ref: '#/components/schemas/DietaryRestriction'
+            type: string
 
     IngredientAdd:
       type: object
@@ -557,3 +557,38 @@ paths:
             application/json:
                schema:
                  $ref: '#/components/schemas/Recipe'
+
+  /ai/recipe:
+    post:
+      summary: Generate Recipe with AI
+      operationId: generateRecipe
+      tags:
+        - ai
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ingredients:
+                  type: array
+                  items:
+                    type: string
+                restrictions:
+                  type: array
+                  items:
+                    type: string
+                uploadId:
+                  $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: Recipe generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+        '401':
+          description: Unauthorized
+        '402':
+          description: Cost limit exceeded
