@@ -5,6 +5,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export const api = createClient<paths>({
   baseUrl: API_URL,
+  credentials: "include", // Ensure cookies are sent/received
 });
 
 // Helper for presigned upload PUT which is outside the OpenAPI spec usually

@@ -41,9 +41,9 @@ services:
     volumes:
       - ./apps/web:/app/apps/web
       - ./packages/api-client:/app/packages/api-client
-      - /app/node_modules
-      - /app/apps/web/node_modules
-      - /app/apps/web/.next
+      - frontend_root_modules:/app/node_modules
+      - frontend_web_modules:/app/apps/web/node_modules
+      - frontend_next_cache:/app/apps/web/.next
     command: pnpm --filter frontend dev
     depends_on:
       backend:
@@ -106,3 +106,6 @@ services:
 volumes:
   postgres_data:
   minio_data:
+  frontend_root_modules:
+  frontend_web_modules:
+  frontend_next_cache:
