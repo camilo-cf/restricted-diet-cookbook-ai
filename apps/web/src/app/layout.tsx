@@ -14,6 +14,7 @@ export const metadata: Metadata = {
 import { Navbar } from "@/components/navbar";
 
 import { ToastProvider } from "@/components/ui/Toast";
+import { WizardProvider } from "@/context/wizard-context";
 
 export default function RootLayout({
   children,
@@ -24,11 +25,13 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.variable} ${outfit.variable} font-sans`}>
         <ToastProvider>
-          <GlobalErrorBanner />
-          <Navbar />
-          <main className="min-h-screen bg-background text-foreground">
-            {children}
-          </main>
+          <WizardProvider>
+            <GlobalErrorBanner />
+            <Navbar />
+            <main className="min-h-screen bg-background text-foreground">
+              {children}
+            </main>
+          </WizardProvider>
         </ToastProvider>
       </body>
     </html>

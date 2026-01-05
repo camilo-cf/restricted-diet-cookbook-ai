@@ -199,6 +199,28 @@ export interface paths {
         };
       };
     };
+    /** Delete Recipe */
+    delete: {
+      parameters: {
+        path: {
+          id: components["schemas"]["Uuid"];
+        };
+      };
+      responses: {
+        /** @description Deleted */
+        204: {
+          content: never;
+        };
+        /** @description Forbidden */
+        403: {
+          content: never;
+        };
+        /** @description Not found */
+        404: {
+          content: never;
+        };
+      };
+    };
     /** Update Recipe */
     patch: {
       parameters: {
@@ -396,6 +418,7 @@ export interface components {
       created_at: components["schemas"]["Timestamp"];
       /** Format: uri */
       imageUrl?: string | null;
+      userId?: components["schemas"]["Uuid"];
     };
     RecipeList: {
       data: components["schemas"]["Recipe"][];

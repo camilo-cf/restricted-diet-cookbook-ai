@@ -167,6 +167,8 @@ components:
           type: string
           format: uri
           nullable: true
+        userId:
+          $ref: '#/components/schemas/Uuid'
 
     RecipeList:
       type: object
@@ -464,6 +466,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Recipe'
+
+    delete:
+      summary: Delete Recipe
+      responses:
+        '204':
+          description: Deleted
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
 
   /recipes/{id}/ingredients:
     post:
