@@ -28,11 +28,39 @@ class StorageService:
             config=Config(signature_version="s3v4"),
         )
         
-        # Ensure CORS is configured for browser uploads
+        # Ensure bucket exists and CORS is configured
         try:
+            self.ensure_bucket_exists()
             self.ensure_bucket_cors()
         except Exception as e:
-            print(f"Warning: Failed to configure CORS for bucket {self.bucket}: {e}")
+            print(f"Warning: Failed to initialize storage for bucket {self.bucket}: {e}")
+
+    def ensure_bucket_exists(self):
+        """Check if bucket exists, create it and set public access if missing"""
+        try:
+            self.s3_client.head_bucket(Bucket=self.bucket)
+        except botocore.exceptions.ClientError as e:
+            error_code = e.response.get('Error', {}).get('Code')
+            if error_code == '404' or error_code == '403': # MinIO sometimes returns 403 on head if no permissions
+                print(f"Bucket {self.bucket} does not exist or is inaccessible. Attempting to create...")
+                self.s3_client.create_bucket(Bucket=self.bucket)
+                # Set basic public read policy (equivalent to mc anonymous set public)
+                import json
+                policy = {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": "*",
+                            "Action": ["s3:GetObject"],
+                            "Resource": [f"arn:aws:s3:::{self.bucket}/*"]
+                        }
+                    ]
+                }
+                self.s3_client.put_bucket_policy(Bucket=self.bucket, Policy=json.dumps(policy))
+                print(f"Bucket {self.bucket} created and public policy applied.")
+            else:
+                raise e
 
     def ensure_bucket_cors(self):
         """Set CORS policy to allow browser-based PUT requests"""
@@ -47,13 +75,10 @@ class StorageService:
                 }
             ]
         }
-        try:
-            self.s3_client.put_bucket_cors(
-                Bucket=self.bucket,
-                CORSConfiguration=cors_configuration
-            )
-        except Exception as e:
-            raise e
+        self.s3_client.put_bucket_cors(
+            Bucket=self.bucket,
+            CORSConfiguration=cors_configuration
+        )
     def generate_presigned_url(self, object_name: str, content_type: str, expiration=120) -> str:
         """Generate a presigned URL to share an S3 object"""
         try:

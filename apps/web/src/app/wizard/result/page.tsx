@@ -59,6 +59,7 @@ export default function ResultPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [resultPhotoId, setResultPhotoId] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
     // If no data and no mock intended, redirect? 
@@ -82,7 +83,7 @@ export default function ResultPage() {
           if (presignError || !presignData) throw new Error("Presign failed");
 
           // 2. Upload (MinIO)
-          // Backend now provides the correct correctly-signed URL for browser access.
+          // Backend now provides the correctly-signed URL for browser access.
           const uploadUrl = presignData.uploadUrl;
 
           const uploadRes = await fetch(uploadUrl, {
@@ -102,6 +103,7 @@ export default function ResultPage() {
           });
 
           setResultPhotoId(presignData.uploadId);
+          setPreviewUrl(presignData.imageUrl);
       } catch (err) {
           console.error(err);
           alert("Failed to upload photo.");
@@ -177,11 +179,11 @@ export default function ResultPage() {
       <Card className="border shadow-md overflow-hidden bg-white/90 backdrop-blur-sm">
         {/* Result Photo Upload Area */}
         <div className="bg-emerald-50/30 border-b p-6 flex flex-col items-center justify-center border-emerald-100/50">
-            {resultPhotoId ? (
+            {resultPhotoId && previewUrl ? (
                 <div className="relative group w-full max-w-md">
                     <div className="h-64 w-full rounded-2xl overflow-hidden shadow-lg border-2 border-white">
                         <img 
-                            src={`http://localhost:9000/recipes/${resultPhotoId}`}
+                            src={previewUrl}
                             alt="Your dish"
                             className="w-full h-full object-cover"
                         />
@@ -190,7 +192,10 @@ export default function ResultPage() {
                         variant="destructive" 
                         size="icon" 
                         className="absolute -top-2 -right-2 rounded-full h-8 w-8 shadow-lg"
-                        onClick={() => setResultPhotoId(null)}
+                        onClick={() => {
+                            setResultPhotoId(null);
+                            setPreviewUrl(null);
+                        }}
                     >
                         <X size={14} />
                     </Button>

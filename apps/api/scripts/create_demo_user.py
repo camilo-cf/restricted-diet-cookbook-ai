@@ -2,6 +2,7 @@ import asyncio
 from app.db.session import AsyncSessionLocal
 from app.db.models.user import User
 from app.core.security import get_password_hash
+from app.db import base # noqa
 
 async def create_demo_user():
     async with AsyncSessionLocal() as db:

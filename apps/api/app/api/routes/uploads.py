@@ -20,6 +20,7 @@ class PresignRequest(BaseModel):
 class PresignResponse(BaseModel):
     uploadId: UUID4
     uploadUrl: str
+    imageUrl: str
 
 class CompleteRequest(BaseModel):
     uploadId: UUID4
@@ -54,7 +55,12 @@ async def create_presigned_url(
     await db.commit()
     await db.refresh(upload_record)
 
-    return {"uploadId": upload_record.id, "uploadUrl": url}
+    # Calculate permanent GET URL for preview
+    from app.core.config import settings
+    base_url = settings.PUBLIC_AWS_ENDPOINT_URL or settings.AWS_ENDPOINT_URL
+    image_url = f"{base_url}/{settings.AWS_BUCKET_NAME}/{object_key}"
+
+    return {"uploadId": upload_record.id, "uploadUrl": url, "imageUrl": image_url}
 
 @router.post("/complete")
 async def complete_upload(

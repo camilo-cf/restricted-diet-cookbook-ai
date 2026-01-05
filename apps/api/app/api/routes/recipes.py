@@ -35,9 +35,8 @@ class RecipeResponse(BaseModel):
 def to_recipe_response(recipe: Recipe) -> RecipeResponse:
     image_url = None
     if recipe.upload:
-        # Assuming public bucket on localhost:9000 for MVP
-        # Ideally use a configured PUBLIC_S3_URL
-        base_url = "http://localhost:9000" 
+        # Use PUBLIC_AWS_ENDPOINT_URL for browser-accessible links
+        base_url = settings.PUBLIC_AWS_ENDPOINT_URL or settings.AWS_ENDPOINT_URL
         image_url = f"{base_url}/{settings.AWS_BUCKET_NAME}/{recipe.upload.object_key}"
     
     return RecipeResponse(
