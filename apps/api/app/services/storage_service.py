@@ -17,6 +17,17 @@ class StorageService:
         )
         self.bucket = settings.AWS_BUCKET_NAME
         
+        # Public URL for presigning (Host header must match browser's view)
+        public_url = settings.PUBLIC_AWS_ENDPOINT_URL or settings.AWS_ENDPOINT_URL
+        self.presign_client = boto3.client(
+            "s3",
+            endpoint_url=public_url,
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            region_name=settings.AWS_REGION,
+            config=Config(signature_version="s3v4"),
+        )
+        
         # Ensure CORS is configured for browser uploads
         try:
             self.ensure_bucket_cors()
@@ -46,7 +57,9 @@ class StorageService:
     def generate_presigned_url(self, object_name: str, content_type: str, expiration=120) -> str:
         """Generate a presigned URL to share an S3 object"""
         try:
-            response = self.s3_client.generate_presigned_url(
+            # Generate using the client oriented towards the public endpoint 
+            # so the Host header in the signature matches what the browser sends.
+            response = self.presign_client.generate_presigned_url(
                 "put_object",
                 Params={
                     "Bucket": self.bucket,

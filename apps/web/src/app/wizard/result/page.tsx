@@ -81,14 +81,9 @@ export default function ResultPage() {
           });
           if (presignError || !presignData) throw new Error("Presign failed");
 
-          // 2. Upload (MinIO Local Patch)
-          let uploadUrl = presignData.uploadUrl;
-          const internalHosts = ["minio:9000", "cookbook-minio:9000"];
-          internalHosts.forEach(host => {
-              if (uploadUrl.includes(host)) {
-                  uploadUrl = uploadUrl.replace(host, "localhost:9000");
-              }
-          });
+          // 2. Upload (MinIO)
+          // Backend now provides the correct correctly-signed URL for browser access.
+          const uploadUrl = presignData.uploadUrl;
 
           const uploadRes = await fetch(uploadUrl, {
               method: "PUT",

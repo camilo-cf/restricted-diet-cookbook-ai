@@ -106,14 +106,8 @@ export default function UploadPage() {
         }
 
         // 2. Upload to S3 (MinIO)
-        // Robust Patch: Replace any internal Docker hostname with localhost for browser access
-        let uploadUrl = presignData.uploadUrl;
-        const internalHosts = ["minio:9000", "cookbook-minio:9000"];
-        internalHosts.forEach(host => {
-            if (uploadUrl.includes(host)) {
-                uploadUrl = uploadUrl.replace(host, "localhost:9000");
-            }
-        });
+        // Backend now provides the correct correctly-signed URL for browser access.
+        const uploadUrl = presignData.uploadUrl;
 
         const uploadRes = await fetch(uploadUrl, {
             method: "PUT",

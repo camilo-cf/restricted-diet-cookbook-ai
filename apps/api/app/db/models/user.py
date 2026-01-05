@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, String
+from sqlalchemy import Boolean, Column, String, ForeignKey
 from sqlalchemy.orm import relationship
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
@@ -11,6 +11,11 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     full_name = Column(String, nullable=False)
+    bio = Column(String, nullable=True)
+    dietary_preferences = Column(String, nullable=True) # Will store JSON string for SQLite/Universal compatibility
     is_active = Column(Boolean, default=True)
+    
+    profile_image_id = Column(UUID(as_uuid=True), ForeignKey("item_uploads.id"), nullable=True)
+    profile_image = relationship("Upload", foreign_keys=[profile_image_id])
     
     recipes = relationship("Recipe", back_populates="user", cascade="all, delete-orphan")

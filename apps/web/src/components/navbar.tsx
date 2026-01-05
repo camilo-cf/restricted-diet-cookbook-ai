@@ -2,13 +2,28 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChefHat, Search, PlusCircle, UserCircle, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { ChefHat, Search, PlusCircle, UserCircle, Menu, X, LogOut, ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
+import { api } from "@/lib/api";
 
 export function Navbar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+        try {
+            const { data, error } = await api.GET("/auth/me");
+            if (!error) setUser(data);
+        } catch (e) {} finally {
+            setLoading(false);
+        }
+    };
+    fetchUser();
+  }, [pathname]); // Refresh on navigation
 
   const isActive = (path: string) => pathname === path;
   const linkClass = (path: string) => `
@@ -17,7 +32,7 @@ export function Navbar() {
   `;
 
   return (
-    <nav className="sticky top-0 z-50 glass">
+    <nav className="sticky top-0 z-50 glass border-b border-emerald-100/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
@@ -29,7 +44,7 @@ export function Navbar() {
                   Restricted Diet <span className="text-emerald-600">Cookbook AI</span>
                </span>
                <span className="font-bold text-xl text-gray-900 hidden sm:block lg:hidden tracking-tight font-brand">
-                  Cookbook <span className="text-emerald-600">AI</span>
+                   AI <span className="text-emerald-600">Cookbook</span>
                </span>
             </Link>
             <div className="hidden sm:ml-8 sm:flex sm:space-x-4 items-center">
@@ -42,12 +57,38 @@ export function Navbar() {
             </div>
           </div>
           
-          <div className="hidden sm:flex items-center">
-              <Link href="/auth/profile">
-                 <Button variant="ghost" size="sm" className="gap-2">
-                    <UserCircle size={18} /> Profile
-                 </Button>
-              </Link>
+          <div className="hidden sm:flex items-center gap-2">
+              {!loading && (
+                  user ? (
+                      <div className="flex items-center gap-2 pl-4 border-l border-emerald-100 ml-2">
+                        <Link href="/profile" className="flex items-center gap-2 hover:bg-emerald-50 p-1.5 rounded-2xl transition-all group">
+                            <div className="h-8 w-8 rounded-xl overflow-hidden bg-emerald-100 text-emerald-700 flex items-center justify-center border border-white shadow-sm">
+                                {user.profileImageUrl ? (
+                                    <img src={user.profileImageUrl} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                    <span className="font-bold text-xs">{user.full_name[0]}</span>
+                                )}
+                            </div>
+                            <span className="text-sm font-bold text-slate-700 pr-1 group-hover:text-emerald-700 transition-colors">
+                                {user.full_name}
+                            </span>
+                        </Link>
+                      </div>
+                  ) : (
+                      <div className="flex items-center gap-2">
+                        <Link href="/login">
+                            <Button variant="ghost" size="sm" className="font-bold text-slate-600">
+                                Log In
+                            </Button>
+                        </Link>
+                        <Link href="/register">
+                            <Button size="sm" className="bg-emerald-600 text-white hover:bg-emerald-700 font-bold shadow-md shadow-emerald-200">
+                                Sign Up
+                            </Button>
+                        </Link>
+                      </div>
+                  )
+              )}
           </div>
 
           <div className="flex items-center sm:hidden">
@@ -63,7 +104,7 @@ export function Navbar() {
 
       {isOpen && (
         <div className="sm:hidden border-t">
-          <div className="pt-2 pb-3 space-y-1 px-4">
+          <div className="pt-2 pb-3 space-y-1 px-4 bg-white/80 backdrop-blur-md">
             <Link 
                 href="/recipes" 
                 className={linkClass("/recipes") + " w-full"}
@@ -78,13 +119,32 @@ export function Navbar() {
             >
               <PlusCircle size={16} /> Create Recipe
             </Link>
-             <Link 
-                href="/auth/profile" 
-                className={linkClass("/auth/profile") + " w-full"}
-                onClick={() => setIsOpen(false)}
-            >
-              <UserCircle size={16} /> Profile
-            </Link>
+            {user ? (
+                <Link 
+                    href="/profile" 
+                    className={linkClass("/profile") + " w-full"}
+                    onClick={() => setIsOpen(false)}
+                >
+                    <UserCircle size={16} /> My Profile
+                </Link>
+            ) : (
+                <>
+                    <Link 
+                        href="/login" 
+                        className={linkClass("/login") + " w-full"}
+                        onClick={() => setIsOpen(false)}
+                    >
+                        Sign In
+                    </Link>
+                    <Link 
+                        href="/register" 
+                        className={linkClass("/register") + " w-full"}
+                        onClick={() => setIsOpen(false)}
+                    >
+                        Sign Up
+                    </Link>
+                </>
+            )}
           </div>
         </div>
       )}

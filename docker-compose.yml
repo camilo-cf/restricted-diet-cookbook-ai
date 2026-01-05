@@ -12,6 +12,7 @@ services:
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/cookbook
       - AWS_ENDPOINT_URL=http://minio:9000
+      - PUBLIC_AWS_ENDPOINT_URL=http://localhost:9000
     depends_on:
       db:
         condition: service_healthy
