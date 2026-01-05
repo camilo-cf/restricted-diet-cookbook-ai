@@ -367,6 +367,8 @@ export interface components {
       uploadId: components["schemas"]["Uuid"];
       /** Format: uri */
       uploadUrl: string;
+      /** Format: uri */
+      imageUrl: string;
       fields?: {
         [key: string]: string;
       };
