@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { User, Camera, Loader2, Save, LogOut, ChefHat, CheckCircle2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { resizeImage } from "@/lib/image";
+import { useToast } from "@/components/ui/Toast";
 
 const schema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters"),
@@ -27,6 +28,7 @@ const DIETARY_OPTIONS = [
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -59,10 +61,11 @@ export default function ProfilePage() {
       });
     } catch (err) {
       console.error(err);
+      toast("Failed to load user profile.", "error");
     } finally {
       setLoading(false);
     }
-  }, [router, reset]);
+  }, [router, reset, toast]);
 
   useEffect(() => {
     fetchUser();
@@ -89,10 +92,11 @@ export default function ProfilePage() {
       if (error) throw error;
       setSuccess(true);
       setUser(updatedUser);
+      toast("Profile updated successfully!", "success");
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       console.error(err);
-      alert("Failed to update profile.");
+      toast("Failed to update profile.", "error");
     } finally {
       setSaving(false);
     }
@@ -137,9 +141,10 @@ export default function ProfilePage() {
           if (updateError) throw updateError;
           
           setUser(updatedUser);
+          toast("Avatar updated!", "success");
       } catch (err) {
           console.error(err);
-          alert("Failed to upload profile picture.");
+          toast("Failed to upload profile picture.", "error");
       } finally {
           setUploading(false);
       }
@@ -147,6 +152,7 @@ export default function ProfilePage() {
 
   const handleLogout = async () => {
       await api.POST("/auth/logout");
+      toast("Logged out successfully.", "info");
       router.push("/");
       router.refresh();
   };

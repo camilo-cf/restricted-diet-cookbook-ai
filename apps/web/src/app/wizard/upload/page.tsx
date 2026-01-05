@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { UploadCloud, Image as ImageIcon, X, Loader2, ChefHat } from "lucide-react";
 import { resizeImage } from "@/lib/image";
+import { useToast } from "@/components/ui/Toast";
 
 export default function UploadPage() {
   const router = useRouter();
   const { data, updateData } = useWizard();
+  const { toast } = useToast();
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [fileName, setFileName] = useState<string | null>(data.photoKey ? "Previously uploaded image" : null);
@@ -78,10 +80,11 @@ export default function UploadPage() {
             uploadId: presignData.uploadId,
             photoPreview: presignData.imageUrl 
         }); 
+        toast("Photo uploaded and optimized successfully!", "success");
 
     } catch (e) {
         console.error(e);
-        alert("An error occurred during upload");
+        toast("An error occurred during upload. Please try another image.", "error");
     } finally {
         setIsUploading(false);
     }
@@ -90,6 +93,7 @@ export default function UploadPage() {
   const clearFile = () => {
       setFileName(null);
       updateData({ photoKey: undefined, uploadId: undefined, photoPreview: undefined });
+      toast("Image removed.", "info");
   };
 
   const onNext = () => {

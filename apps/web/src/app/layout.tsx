@@ -13,6 +13,8 @@ export const metadata: Metadata = {
 
 import { Navbar } from "@/components/navbar";
 
+import { ToastProvider } from "@/components/ui/Toast";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -21,11 +23,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${outfit.variable} font-sans`}>
-        <GlobalErrorBanner />
-        <Navbar />
-        <main className="min-h-screen bg-background text-foreground">
-          {children}
-        </main>
+        <ToastProvider>
+          <GlobalErrorBanner />
+          <Navbar />
+          <main className="min-h-screen bg-background text-foreground">
+            {children}
+          </main>
+        </ToastProvider>
       </body>
     </html>
   );

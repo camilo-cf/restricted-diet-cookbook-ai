@@ -11,10 +11,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/lib/api";
 import { resizeImage } from "@/lib/image";
+import { useToast } from "@/components/ui/Toast";
 
 export default function ResultPage() {
   const router = useRouter();
-  const { data, updateData } = useWizard();
+  const { data, updateData, reset } = useWizard();
+  const { toast } = useToast();
   
   // Initialize state with context data or mock
   const initialRecipe = (data.generatedRecipe || {
@@ -89,10 +91,11 @@ export default function ResultPage() {
           
           // Also update wizard context for consistency
           updateData({ uploadId: presignData.uploadId, photoPreview: presignData.imageUrl });
+          toast("Photo updated successfully!", "success");
           
       } catch (err) {
           console.error(err);
-          alert("Failed to upload photo.");
+          toast("Failed to upload photo.", "error");
       } finally {
           setIsUploading(false);
       }
@@ -100,7 +103,7 @@ export default function ResultPage() {
 
   const handleSave = async () => {
       if (!data.generatedRecipe?.id) {
-          alert("Cannot save (Mock Mode or Missing ID)");
+          toast("Cannot save: Missing recipe ID. Try generating again.", "error");
           return;
       }
       setIsSaving(true);
@@ -120,16 +123,26 @@ export default function ResultPage() {
           });
           
           if (error) throw error;
-          alert("Recipe saved successfully!");
+          
+          toast("Recipe saved successfully! Redirecting...", "success");
+          
+          // Clear wizard context and redirect
+          setTimeout(() => {
+              const recipeId = data.generatedRecipe?.id;
+              reset(); // Clear Wizard storage
+              router.push(`/recipes/${recipeId}`);
+          }, 1500);
+
       } catch (e: any) {
           console.error(e);
-          alert("Failed to save changes.");
+          toast("Failed to save changes. Please try again.", "error");
       } finally {
           setIsSaving(false);
       }
   };
 
   const handleStartOver = () => {
+    reset();
     router.push("/wizard/ingredients");
   };
 
