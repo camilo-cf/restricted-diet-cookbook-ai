@@ -16,7 +16,33 @@ class StorageService:
             config=Config(signature_version="s3v4"),
         )
         self.bucket = settings.AWS_BUCKET_NAME
+        
+        # Ensure CORS is configured for browser uploads
+        try:
+            self.ensure_bucket_cors()
+        except Exception as e:
+            print(f"Warning: Failed to configure CORS for bucket {self.bucket}: {e}")
 
+    def ensure_bucket_cors(self):
+        """Set CORS policy to allow browser-based PUT requests"""
+        cors_configuration = {
+            'CORSRules': [
+                {
+                    'AllowedHeaders': ['*'],
+                    'AllowedMethods': ['PUT', 'POST', 'GET', 'HEAD'],
+                    'AllowedOrigins': settings.CORS_ORIGINS + ["http://localhost:3000", "http://127.0.0.1:3000"],
+                    'ExposeHeaders': ['ETag'],
+                    'MaxAgeSeconds': 3000
+                }
+            ]
+        }
+        try:
+            self.s3_client.put_bucket_cors(
+                Bucket=self.bucket,
+                CORSConfiguration=cors_configuration
+            )
+        except Exception as e:
+            raise e
     def generate_presigned_url(self, object_name: str, content_type: str, expiration=120) -> str:
         """Generate a presigned URL to share an S3 object"""
         try:

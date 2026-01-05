@@ -83,16 +83,23 @@ export default function ResultPage() {
 
           // 2. Upload (MinIO Local Patch)
           let uploadUrl = presignData.uploadUrl;
-          if (uploadUrl.includes("minio:9000")) {
-              uploadUrl = uploadUrl.replace("minio:9000", "localhost:9000");
-          }
+          const internalHosts = ["minio:9000", "cookbook-minio:9000"];
+          internalHosts.forEach(host => {
+              if (uploadUrl.includes(host)) {
+                  uploadUrl = uploadUrl.replace(host, "localhost:9000");
+              }
+          });
 
           const uploadRes = await fetch(uploadUrl, {
               method: "PUT",
               body: file,
               headers: { "Content-Type": file.type }
           });
-          if (!uploadRes.ok) throw new Error("Upload failed");
+          if (!uploadRes.ok) {
+              const errorText = await uploadRes.text().catch(() => "No error body");
+              console.error(`Dish upload failed: ${uploadRes.status}`, errorText);
+              throw new Error(`Upload failed: ${uploadRes.status}`);
+          }
 
           // 3. Complete
           await api.POST("/uploads/complete", {

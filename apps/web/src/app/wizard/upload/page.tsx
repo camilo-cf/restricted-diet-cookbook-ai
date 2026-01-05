@@ -106,12 +106,14 @@ export default function UploadPage() {
         }
 
         // 2. Upload to S3 (MinIO)
-        // PATCH: If running locally and URL contains 'minio:9000', replace with 'localhost:9000'
-        // This is necessary because 'minio' is only resolvable inside the Docker network.
+        // Robust Patch: Replace any internal Docker hostname with localhost for browser access
         let uploadUrl = presignData.uploadUrl;
-        if (uploadUrl.includes("minio:9000")) {
-            uploadUrl = uploadUrl.replace("minio:9000", "localhost:9000");
-        }
+        const internalHosts = ["minio:9000", "cookbook-minio:9000"];
+        internalHosts.forEach(host => {
+            if (uploadUrl.includes(host)) {
+                uploadUrl = uploadUrl.replace(host, "localhost:9000");
+            }
+        });
 
         const uploadRes = await fetch(uploadUrl, {
             method: "PUT",
@@ -122,8 +124,9 @@ export default function UploadPage() {
         });
 
         if (!uploadRes.ok) {
-            console.error("Upload failed");
-            alert("Failed to upload image");
+            const errorText = await uploadRes.text().catch(() => "No error body");
+            console.error(`Upload failed: ${uploadRes.status} ${uploadRes.statusText}`, errorText);
+            alert(`Failed to upload image: ${uploadRes.status} ${uploadRes.statusText}`);
             return;
         }
 
