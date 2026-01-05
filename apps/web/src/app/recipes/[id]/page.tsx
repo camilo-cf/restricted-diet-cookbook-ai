@@ -9,11 +9,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Clock, Users, Printer, Share2, ChefHat, ArrowLeft, Edit3 } from "lucide-react";
 import Link from "next/link";
 import { useWizard } from "@/context/wizard-context";
+import { useToast } from "@/components/ui/Toast";
+import { Trash2 } from "lucide-react";
 
 export default function RecipeDetail() {
   const { id } = useParams();
   const router = useRouter();
   const { updateData } = useWizard();
+  const { toast } = useToast();
   const [recipe, setRecipe] = useState<any>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -93,9 +96,14 @@ export default function RecipeDetail() {
         </Link>
         
         {canEdit && (
-            <Button onClick={handleEdit} className="bg-amber-500 hover:bg-amber-600 shadow-md hover:shadow-lg transition-all gap-2">
-                <Edit3 size={18} /> Edit Recipe
-            </Button>
+            <div className="flex gap-2">
+                <Button onClick={handleEdit} className="bg-amber-500 hover:bg-amber-600 shadow-md hover:shadow-lg transition-all gap-2">
+                    <Edit3 size={18} /> Edit
+                </Button>
+                <Button onClick={handleDelete} variant="destructive" className="shadow-md hover:shadow-lg transition-all gap-2">
+                    <Trash2 size={18} /> Delete
+                </Button>
+            </div>
         )}
       </div>
 
