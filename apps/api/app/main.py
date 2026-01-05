@@ -21,7 +21,7 @@ if settings.CORS_ORIGINS:
         allow_headers=["*"],
     )
 
-from app.api.routes import auth, health, uploads, ai
+from app.api.routes import auth, health, uploads, ai, recipes
 
 # ...
 
@@ -30,6 +30,7 @@ app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(health.router, prefix="/health", tags=["health"])
 app.include_router(uploads.router, prefix="/uploads", tags=["uploads"])
 app.include_router(ai.router, prefix="/ai", tags=["ai"])
+app.include_router(recipes.router, prefix="/recipes", tags=["recipes"])
 
 @app.get("/")
 def root():
