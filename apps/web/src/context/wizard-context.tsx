@@ -8,6 +8,7 @@ interface WizardData {
   ingredients: string;
   restrictions: string;
   photoKey?: string; // S3 Object Key
+  uploadId?: string; // Backend Database ID
   generatedRecipe?: Recipe;
 }
 

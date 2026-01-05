@@ -66,14 +66,14 @@ export default function ResultPage() {
             <div className="flex justify-center gap-8 text-sm font-medium text-gray-600">
                 <div className="flex items-center gap-2">
                     <Clock size={18} className="text-primary" /> 
-                    <span>{(recipe.prepTimeMinutes || 0) + (recipe.cookTimeMinutes || 0)} min Total</span>
+                    <span>{(recipe.prepTimeMinutes || recipe.prep_time_minutes || 0) + (recipe.cookTimeMinutes || recipe.cook_time_minutes || 0)} min Total</span>
                 </div>
                 <div className="flex items-center gap-2">
                     <Users size={18} className="text-primary" /> 
                     <span>2 Servings</span>
                 </div>
                 {/* Dynamically show tags */}
-                {recipe.dietaryTags?.map(tag => (
+                {(recipe.dietaryTags || recipe.dietary_tags || [])?.map((tag: string) => (
                    <div key={tag} className="flex items-center gap-2">
                         <ChefHat size={18} className="text-accent" />
                         <span>{tag}</span>

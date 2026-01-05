@@ -1,7 +1,7 @@
 import uuid
 from sqlalchemy import Column, String, Boolean, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
-from app.db.base import Base
+from app.db.base_class import Base
 
 class Upload(Base):
     __tablename__ = "item_uploads" # 'uploads' is reserved keyword in some DBs, safety first

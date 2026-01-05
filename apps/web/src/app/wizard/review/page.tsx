@@ -6,21 +6,41 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Sparkles, Edit2 } from "lucide-react";
 
+import { api } from "@/lib/api";
+
 export default function ReviewPage() {
   const router = useRouter();
-  const { data } = useWizard();
+  const { data, updateData } = useWizard();
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerate = async () => {
     setIsGenerating(true);
-    // TODO: Call API here
-    console.log("Generating recipe for:", data);
     
-    // Simulate delay
-    setTimeout(() => {
-        setIsGenerating(false);
+    try {
+        const { data: recipe, error } = await api.POST("/ai/recipe", {
+            body: {
+                ingredients: data.ingredients ? data.ingredients.split(",").map(i => i.trim()) : [],
+                restrictions: data.restrictions ? data.restrictions.split(",").map(r => r.trim()) : [],
+                uploadId: data.uploadId,
+                user_notes: ""
+            }
+        });
+
+        if (error || !recipe) {
+            console.error("Generation failed", error);
+            alert("Failed to generate recipe. Please try again.");
+            setIsGenerating(false);
+            return;
+        }
+
+        updateData({ generatedRecipe: recipe });
         router.push("/wizard/result");
-    }, 2000);
+
+    } catch (e) {
+        console.error(e);
+        alert("An unexpected error occurred.");
+        setIsGenerating(false);
+    }
   };
 
   return (

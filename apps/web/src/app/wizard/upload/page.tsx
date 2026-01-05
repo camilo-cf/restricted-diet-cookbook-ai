@@ -39,12 +39,61 @@ export default function UploadPage() {
     }
   };
 
-  const handleFile = (file: File) => {
-    // Ideally upload to S3 here and get key.
-    // For now, we simulate success.
-    console.log("Selected file:", file);
-    setFileName(file.name);
-    updateData({ photoKey: "temp-key-" + file.name }); 
+  const handleFile = async (file: File) => {
+    // 1. Get Presigned URL
+    try {
+        const { data: presignData, error: presignError } = await api.POST("/uploads/presign", {
+            body: {
+                filename: file.name,
+                contentType: file.type,
+                sizeBytes: file.size
+            }
+        });
+
+        if (presignError || !presignData) {
+            console.error("Presign failed", presignError);
+            alert("Failed to initiate upload");
+            return;
+        }
+
+        // 2. Upload to S3 (MinIO)
+        // Note: prevent default headers causing CORS issues on PUT
+        const uploadRes = await fetch(presignData.uploadUrl, {
+            method: "PUT",
+            body: file,
+            headers: {
+                "Content-Type": file.type
+            }
+        });
+
+        if (!uploadRes.ok) {
+            console.error("Upload failed");
+            alert("Failed to upload image");
+            return;
+        }
+
+        // 3. Complete Upload
+        const { error: completeError } = await api.POST("/uploads/complete", {
+            body: { uploadId: presignData.uploadId }
+        });
+
+        if (completeError) {
+             console.error("Completion failed", completeError);
+             return;
+        }
+
+        // Success
+        console.log("Upload success:", presignData.uploadId);
+        setFileName(file.name);
+        updateData({ 
+            photoKey: "uploaded/" + file.name, // Display only
+            uploadId: presignData.uploadId // Real ID
+        }); 
+
+    } catch (e) {
+        console.error(e);
+        alert("An error occurred during upload");
+    }
   };
 
   const clearFile = () => {

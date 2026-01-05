@@ -64,4 +64,12 @@ class StorageService:
                 raise ValueError("Object not found in storage")
             raise e
 
+    def download_file(self, object_name: str) -> bytes:
+        """Download file content as bytes for AI processing"""
+        try:
+            response = self.s3_client.get_object(Bucket=self.bucket, Key=object_name)
+            return response["Body"].read()
+        except Exception as e:
+            raise e
+
 storage_service = StorageService()
