@@ -104,8 +104,8 @@ export default function ResultPage() {
       
       {/* Header Section */}
       <div className="text-center space-y-4">
-        <Badge variant="secondary" className="mb-2 bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transaction-colors">
-            <CheckCircle size={14} className="mr-1" /> AI Proposal - Ready for Review
+        <Badge variant="secondary" className="mb-4 bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+            <CheckCircle size={14} className="mr-1" /> Draft Ready for Refinement
         </Badge>
         
         <div className="max-w-md mx-auto">

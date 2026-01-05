@@ -4,14 +4,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_
 
-from app.db.session import get_db
+from app.api.deps_auth import get_db, get_current_user
 from app.db.models.recipe import Recipe
 from app.db.models.user import User
-from app.api.routes.auth import get_current_active_user
 
 router = APIRouter()
 
-@router.get("/", response_model=None)
+@router.get("", response_model=None)
 async def get_recipes(
     db: AsyncSession = Depends(get_db),
     skip: int = 0,
@@ -59,7 +58,7 @@ async def update_recipe(
     id: UUID,
     recipe_in: dict, # Receiving a dict for flexibility, normally would use a Pydantic schema
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """
     Update a recipe.
@@ -97,7 +96,7 @@ async def update_recipe(
 async def delete_recipe(
     id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """
     Delete a recipe.

@@ -15,4 +15,3 @@ venv
 playwright-report
 test-results
 *.log
-.env

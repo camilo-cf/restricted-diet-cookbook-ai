@@ -14,8 +14,13 @@ const features = [
   },
   {
     icon: Sparkles,
-    title: "Get AI Recipes",
-    description: "Receive personalized, restriction-safe recipes",
+    title: "Draft with AI Support",
+    description: "Get a safe, personalized recipe draft instantly",
+  },
+  {
+    icon: ChefHat,
+    title: "Refine & Make It Yours",
+    description: "Edit ingredients and steps to perfect your creation",
   },
 ];
 
@@ -64,7 +69,7 @@ export default function Home() {
         <h2 className="text-2xl font-bold text-center text-gray-900 mb-12">
           How It Works
         </h2>
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, index) => (
             <div
               key={feature.title}
