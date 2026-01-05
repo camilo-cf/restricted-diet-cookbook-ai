@@ -249,6 +249,31 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
 
+  /auth/register:
+    post:
+      summary: Register
+      operationId: register
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Email already registered
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
   /auth/login:
     post:
       summary: Login

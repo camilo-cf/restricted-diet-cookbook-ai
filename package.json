@@ -1,0 +1,27 @@
+{
+  "name": "restricted-diet-cookbook-ai",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "docker compose up",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "format": "prettier --write .",
+    "prepare": "husky install",
+    "openapi:validate": "spectral lint openapi.yaml",
+    "gen:client": "openapi-typescript openapi.yaml -o packages/api-client/src/schema.d.ts",
+    "client:check": "pnpm gen:client && git diff --exit-code packages/api-client/src/schema.d.ts",
+    "check": "pnpm -r check",
+    "db:reset": "docker compose down -v && docker compose up -d db && sleep 5 && cd apps/api && alembic upgrade head && python scripts/seed_db.py"
+  },
+  "devDependencies": {
+    "@stoplight/spectral-cli": "^6.11.0",
+    "husky": "^8.0.0",
+    "lint-staged": "^15.2.0",
+    "openapi-typescript": "^6.7.4",
+    "prettier": "^3.2.5",
+    "typescript": "^5.3.3"
+  },
+  "packageManager": "pnpm@8.15.3"
+}

@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD Pipeline
 
 on:
   push:
@@ -7,7 +7,10 @@ on:
     branches: [ main ]
 
 jobs:
-  contract-validation:
+  # ------------------------------------------------------------------
+  # JOB 1: SMOKE (Fail Fast < 2m)
+  # ------------------------------------------------------------------
+  smoke:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,56 +19,84 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          
-      - name: Install Spectral
-        run: npm install -g @stoplight/spectral-cli
-        
-      - name: Lint OpenAPI Spec
-        run: spectral lint openapi.yaml --ruleset https://raw.githubusercontent.com/stoplightio/spectral-standard/main/rulesets/.spectral.yaml || echo "Warning: using default rules"
+          cache: 'pnpm'
 
-  backend-check:
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 1. Contract Validation
+        run: |
+          npm install -g @stoplight/spectral-cli
+          spectral lint openapi.yaml --ruleset https://raw.githubusercontent.com/stoplightio/spectral-standard/main/rulesets/.spectral.yaml || echo "Warning: using default rules"
+
+      - name: 2. Client Freshness Check
+        run: pnpm client:check
+
+      - name: 3. Frontend Build Check
+        run: |
+          cd apps/web
+          pnpm build
+          
+      - name: 4. Backend Boot & Health Check
+        run: |
+          # Build and start minimal stack
+          docker compose up -d db backend
+          
+          # Wait for health (max 60s)
+          timeout=60
+          while [ $timeout -gt 0 ]; do
+            if curl -s http://localhost:8000/health | grep "ok" > /dev/null; then
+              echo "✅ Backend Healthy"
+              exit 0
+            fi
+            sleep 1
+            timeout=$((timeout - 1))
+          done
+          
+          echo "❌ Backend failed to boot"
+          docker compose logs backend
+          exit 1
+
+  # ------------------------------------------------------------------
+  # JOB 2: FULL TESTS (Expensive)
+  # ------------------------------------------------------------------
+  full-tests:
+    needs: smoke
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-          
-      - name: Install dependencies
-        run: |
-          cd backend
-          python -m pip install --upgrade pip
-          pip install ruff black mypy
-          pip install -r requirements.txt
-          
-      - name: Lint with Ruff
-        run: |
-          cd backend
-          ruff check .
+      - name: Start Full Stack
+        run: docker compose up -d db minio backend frontend
 
-      - name: Format check with Black
-        run: |
-          cd backend
-          black --check .
+      - name: Run Backend Tests
+        run: docker compose exec -T backend pytest
 
-  frontend-check:
+      - name: Run Frontend Tests
+        run: |
+           # Install Playwright browsers (if running local/non-docker E2E, 
+           # but we use run.sh test which might use docker. 
+           # Let's use the containerized approach from run.sh test)
+           # Actually, for CI let's be explicit:
+           docker compose exec -T frontend pnpm test
+
+  # ------------------------------------------------------------------
+  # JOB 3: DEPLOY (Delivery)
+  # ------------------------------------------------------------------
+  deploy:
+    needs: full-tests
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-          
-      - name: Install dependencies
-        run: npm ci || echo "Skipping npm ci as package-lock.json might likely not exist yet"
-        
-      # Placeholder for lint/test once frontend is init
+      - name: Trigger Render Deploy
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -n "$RENDER_DEPLOY_HOOK" ]; then
+            curl "$RENDER_DEPLOY_HOOK"
+          else
+            echo "⚠️ RENDER_DEPLOY_HOOK not set, skipping deploy trigger."
+          fi

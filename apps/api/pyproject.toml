@@ -1,0 +1,5 @@
+[tool.pytest.ini_options]
+addopts = "--cov=app --cov-report=term-missing --cov-report=html --cov-fail-under=70"
+pythonpath = ["."]
+testpaths = ["tests"]
+asyncio_mode = "strict"

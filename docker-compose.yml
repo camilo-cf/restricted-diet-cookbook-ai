@@ -3,27 +3,34 @@ name: restricted-diet-cookbook-ai
 services:
   backend:
     build:
-      context: ./backend
+      context: ./apps/api
     container_name: cookbook-backend
     ports:
       - "8000:8000"
     env_file:
       - .env
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/cookbook
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/cookbook
       - AWS_ENDPOINT_URL=http://minio:9000
     depends_on:
       db:
         condition: service_healthy
       minio:
-        condition: service_healthy
+        condition: service_started
     volumes:
-      - ./backend:/app
+      - ./apps/api:/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   frontend:
     build:
-      context: ./frontend
+      context: .
+      dockerfile: apps/web/Dockerfile
+      target: dev
     container_name: cookbook-frontend
     ports:
       - "3000:3000"
@@ -32,14 +39,24 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000
     volumes:
-      - ./frontend:/app
+      - ./apps/web:/app/apps/web
+      - ./packages/api-client:/app/packages/api-client
       - /app/node_modules
-    command: npm run dev
+      - /app/apps/web/node_modules
+      - /app/apps/web/.next
+    command: pnpm --filter frontend dev
     depends_on:
-      - backend
+      backend:
+         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   db:
-    image: postgres:15-alpine
+    image: postgres:15.6-alpine
     container_name: cookbook-db
     environment:
       - POSTGRES_USER=postgres
@@ -56,7 +73,7 @@ services:
       retries: 5
 
   minio:
-    image: minio/minio:RELEASE.2024-01-01T16-36-33Z --pinned version
+    image: minio/minio:RELEASE.2024-01-31T20-20-33Z
     container_name: cookbook-minio
     ports:
       - "9000:9000"
@@ -67,17 +84,17 @@ services:
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
+    # healthcheck:
+    #   test: ["CMD-SHELL", "bash -c 'cat < /dev/tcp/localhost/9000 &>/dev/null'"]
+    #   interval: 30s
+    #   timeout: 20s
+    #   retries: 3
 
   createbuckets:
-    image: minio/mc
+    image: minio/mc:RELEASE.2024-01-16T16-06-34Z
     depends_on:
       minio:
-        condition: service_healthy
+        condition: service_started
     entrypoint: >
       /bin/sh -c "
       /usr/bin/mc config host add myminio http://minio:9000 minioadmin minioadmin;

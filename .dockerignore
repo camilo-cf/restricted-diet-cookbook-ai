@@ -1,0 +1,15 @@
+.git
+.venv
+node_modules
+__pycache__
+*.pyc
+.DS_Store
+.env
+.coverage
+htmlcov
+.pytest_cache
+*.log
+apps/web/.next
+apps/web/out
+dist
+tmp

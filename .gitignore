@@ -1,0 +1,17 @@
+node_modules
+.pnpm-store
+dist
+build
+.next
+__pycache__
+*.pyc
+.env
+.DS_Store
+coverage
+.pytest_cache
+venv
+.venv
+.mypy_cache
+playwright-report
+test-results
+*.log

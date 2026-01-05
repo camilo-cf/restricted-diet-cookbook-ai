@@ -1,0 +1,15 @@
+{
+    "mcpServers": {
+        "restricted-diet-cookbook": {
+            "command": "python",
+            "args": [
+                "-m",
+                "apps.api.mcp_server"
+            ],
+            "env": {
+                "PYTHONPATH": "."
+            },
+            "description": "Exposes cookbook API functions as MCP tools."
+        }
+    }
+}

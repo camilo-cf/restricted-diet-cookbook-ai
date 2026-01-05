@@ -1,0 +1,98 @@
+services:
+  # --------------------------------------------------------------------------------
+  # FRONTEND (Next.js)
+  # --------------------------------------------------------------------------------
+  - type: web
+    name: cookbook-frontend
+    runtime: docker
+    region: oregon
+    plan: free
+    context: .
+    dockerfilePath: ./apps/web/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: cookbook-backend
+          property: url
+
+  # --------------------------------------------------------------------------------
+  # BACKEND (Python/FastAPI)
+  # --------------------------------------------------------------------------------
+  - type: web
+    name: cookbook-backend
+    runtime: docker
+    region: oregon
+    plan: free
+    context: .
+    dockerfilePath: ./apps/api/Dockerfile
+    healthCheckPath: /health
+    numInstances: 1
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cookbook-db
+          property: connectionString
+      - key: POOL_SIZE
+        value: "5"
+      - key: DB_TIMEOUT
+        value: "30"
+      - key: AWS_ACCESS_KEY_ID
+        fromService:
+          type: web
+          name: cookbook-minio
+          envVarKey: MINIO_ROOT_USER
+      - key: AWS_SECRET_ACCESS_KEY
+        fromService:
+          type: web
+          name: cookbook-minio
+          envVarKey: MINIO_ROOT_PASSWORD
+      - key: STORAGE_ENDPOINT
+        fromService:
+          type: web
+          name: cookbook-minio
+          property: url
+      - key: STORAGE_BUCKET_NAME
+        value: "uploads"
+      - key: USE_MINIO
+        value: "true"
+      - key: CORS_ORIGINS
+        fromService:
+          type: web
+          name: cookbook-frontend
+          property: url
+      # API Key must be set manually in Render Dashboard for security
+      - key: OPENAI_API_KEY
+        sync: false
+
+  # --------------------------------------------------------------------------------
+  # STORAGE (MinIO)
+  # --------------------------------------------------------------------------------
+  # Note: MinIO needs to be a Web Service (not Private) for Presigned URLs to work from the browser.
+  - type: web
+    name: cookbook-minio
+    runtime: image
+    image: minio/minio:RELEASE.2024-01-31T20-20-33Z
+    region: oregon
+    plan: free
+    disk:
+      name: minio-data
+      mountPath: /data
+      sizeGB: 1
+    startCommand: minio server /data --console-address ":9001"
+    envVars:
+      - key: MINIO_ROOT_USER
+        generateValue: true
+      - key: MINIO_ROOT_PASSWORD
+        generateValue: true
+
+databases:
+  # --------------------------------------------------------------------------------
+  # DATABASE (PostgreSQL)
+  # --------------------------------------------------------------------------------
+  - name: cookbook-db
+    databaseName: cookbook
+    user: cookbook_user
+    plan: free
+    region: oregon
