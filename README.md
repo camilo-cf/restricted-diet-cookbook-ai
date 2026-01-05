@@ -6,13 +6,15 @@
 ---
 
 ## 🎯 Problem & Solution
-People with restricted diets (allergies, intolerances, lifestyle choices) struggle to find recipes that use the ingredients they *already have* without violating their constraints.
-**Cookbook AI** solves this by:
-1.  **Scanning Ingredients**: Upload a photo of your fridge/pantry (Simulated Analysis).
-2.  **Respecting Restrictions**: Hard constraints on allergies and diets.
-3.  **Generating Custom Recipes**: Using OpenAI GPT-4 to create safe, tailored recipes.
+Navigating a restricted diet (allergies, intolerances, or specific lifestyles like Keto/Vegan) often means settling for generic recipes or spending hours manually filtering search results. The challenge is finding a meal that is both **safe** and **achievable** with the ingredients currently in your pantry.
 
-**Demo URL**: [https://restricted-diet-cookbook-ai.onrender.com](https://restricted-diet-cookbook-ai.onrender.com) (Example Deployment)
+**Cookbook AI** delivers a professional, engineering-first solution:
+1.  **Visual Ingredient Capture**: Snap a photo of your fridge or pantry to automatically identify base ingredients (Vision-Powered Simulation).
+2.  **Hard Constraint Enforcement**: A strict dietary profile ensures the AI honors your restrictions—guaranteeing personal safety and culinary trust.
+3.  **Tailored Gourmet Generation**: Leveraging OpenAI GPT-4o with structured output to produce high-quality, chef-grade recipes in seconds.
+4.  **The Showcase Loop**: Document your success by uploading photos of your final cooked dishes, building a personalized gallery of safe culinary wins.
+
+**Demo URL**: [https://restricted-diet-cookbook-ai.onrender.com](https://restricted-diet-cookbook-ai.onrender.com)
 
 ---
 
@@ -109,22 +111,12 @@ This is not just a wrapper; it's an engineered AI service. See [prompts/AGENT_SY
 
 ## 🛳️ Production Deployment
 
-For a robust production environment, we recommend using Docker with a process manager or orchestrator.
+For detailed production setup instructions, including environment optimization, storage endpoint handling, and scaling, see the [DEPLOYMENT.md](DEPLOYMENT.md) guide.
 
-### 1. Build and Run (Docker)
-```bash
-# Build production images and start in detached mode
-docker compose -f docker-compose.yml up --build -d
-```
-
-### 2. Environment Configuration
-Ensure your `.env` file contains production-ready secrets:
-* `DATABASE_URL`: Point to a persistent RDS/Postgres instance.
-* `SECRET_KEY`: Generate a long, random alphanumeric string.
-* `OPENAI_API_KEY`: Ensure billing is active.
-* `AWS_ENDPOINT_URL`: (Internal) The address the backend uses to talk to storage (e.g. `http://minio:9000`).
-* `PUBLIC_AWS_ENDPOINT_URL`: (External) The address the browser uses to upload images (e.g. `https://storage.yourdomain.com`).
-* `CORS_ORIGINS`: List of frontend domains allowed to access the API.
+### Quick Start (Render)
+1. Ensure your repository has the provided `render.yaml`.
+2. Deploy via Render Blueprint.
+3. Manually add `OPENAI_API_KEY` to the `cookbook-backend` service.
 
 ### New Features (v1.1)
 - **User Management**: Registration, profile customization, and dietary preferences.

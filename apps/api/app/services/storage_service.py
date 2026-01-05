@@ -28,10 +28,17 @@ class StorageService:
             config=Config(signature_version="s3v4"),
         )
         
-        # Ensure bucket exists and CORS is configured
+        # Lazy initialization for bucket and CORS
+        self._initialized = False
+
+    def initialize(self):
+        """Explicitly initialize bucket and CORS. Should be called during lifespan."""
+        if self._initialized:
+            return
         try:
             self.ensure_bucket_exists()
             self.ensure_bucket_cors()
+            self._initialized = True
         except Exception as e:
             print(f"Warning: Failed to initialize storage for bucket {self.bucket}: {e}")
 

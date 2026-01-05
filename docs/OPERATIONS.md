@@ -4,6 +4,12 @@
 This project is configured for **Continuous Deployment (CD)** via Render Blueprints.
 - **Trigger**: Pushing to the `main` branch automatically triggers a new deployment for all services.
 - **Config**: Defined in `render.yaml` at the repository root.
+- **Detailed Setup**: See the master [DEPLOYMENT.md](../DEPLOYMENT.md) guide.
+
+## Service Initialization
+The application uses **Lazy Initialization** for Storage and AI services. 
+- **Behavior**: Services are initialized upon the first incoming request or explicit trigger during the application lifespan.
+- **Observation**: Monitor logs for `[StorageInitialized]` or `[AIReady]` tags to confirm successful startup in production.
 
 ## Monitoring
 

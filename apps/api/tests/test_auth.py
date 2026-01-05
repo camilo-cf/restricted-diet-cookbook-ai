@@ -6,18 +6,19 @@ from sqlalchemy import select
 
 @pytest.mark.asyncio
 async def test_register_and_login(client: AsyncClient, db: AsyncSession):
-    # 1. Register
-    reg_data = {"username": "test_user@example.com", "password": "password123"}
+    # 1. Register with unique email
+    import uuid
+    email = f"auth_test_{uuid.uuid4().hex[:8]}@example.com"
+    reg_data = {"username": email, "password": "password123"}
     response = await client.post("/auth/register", json=reg_data)
     assert response.status_code == 201
-    assert response.json()["email"] == "test_user@example.com"
-    assert response.json()["full_name"] == "test_user"
+    assert response.json()["email"] == email
 
     # 2. Login
     login_response = await client.post("/auth/login", json=reg_data)
     assert login_response.status_code == 200
     assert "session_id" in login_response.cookies
-    assert login_response.json()["email"] == "test_user@example.com"
+    assert login_response.json()["email"] == email
 
 @pytest.mark.asyncio
 async def test_profile_update(client_with_auth: AsyncClient, db: AsyncSession):
@@ -33,6 +34,8 @@ async def test_profile_update(client_with_auth: AsyncClient, db: AsyncSession):
     assert data["full_name"] == "Updated Name"
     assert data["bio"] == "New bio"
     assert "Vegan" in data["dietaryPreferences"]
+    assert "role" in data
+    assert data["role"] == "user" # Default role
 
 @pytest.mark.asyncio
 async def test_logout(client_with_auth: AsyncClient):

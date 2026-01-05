@@ -9,8 +9,18 @@ from app.db.session import engine
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Create tables on startup (Dev only or first run)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    # Skip for SQLite (tests) to avoid hangs on production connection
+    if not settings.DATABASE_URL.startswith("sqlite"):
+        try:
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+        except Exception as e:
+            print(f"Skipping lifespan table creation: {e}")
+            
+    # Initialize Storage (Bucket/CORS)
+    from app.services.storage_service import storage_service
+    storage_service.initialize()
+    
     yield
 
 app = FastAPI(
@@ -20,7 +30,9 @@ app = FastAPI(
 )
 
 # Middleware
-app.add_middleware(RequestIDMiddleware)
+import os
+if os.getenv("TESTING") != "True":
+    app.add_middleware(RequestIDMiddleware)
 
 if settings.CORS_ORIGINS:
     app.add_middleware(

@@ -48,15 +48,20 @@ services:
           type: web
           name: cookbook-minio
           envVarKey: MINIO_ROOT_PASSWORD
-      - key: STORAGE_ENDPOINT
+      - key: AWS_ENDPOINT_URL
         fromService:
           type: web
           name: cookbook-minio
           property: url
-      - key: STORAGE_BUCKET_NAME
+      - key: PUBLIC_AWS_ENDPOINT_URL
+        fromService:
+          type: web
+          name: cookbook-minio
+          property: url
+      - key: AWS_BUCKET_NAME
         value: "uploads"
-      - key: USE_MINIO
-        value: "true"
+      - key: AWS_REGION
+        value: "us-east-1"
       - key: CORS_ORIGINS
         fromService:
           type: web

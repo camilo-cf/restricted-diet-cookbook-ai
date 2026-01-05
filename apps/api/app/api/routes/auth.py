@@ -29,6 +29,7 @@ class UserResponse(BaseModel):
     bio: Optional[str] = None
     dietaryPreferences: Optional[List[str]] = None
     profileImageUrl: Optional[str] = None
+    role: str
     is_active: bool
     
     class Config:
@@ -61,6 +62,7 @@ def to_user_response(user: User) -> UserResponse:
         bio=user.bio,
         dietaryPreferences=prefs,
         profileImageUrl=profile_url,
+        role=user.role,
         is_active=user.is_active
     )
 
@@ -73,6 +75,7 @@ async def register(
     # 1. Check if email exists
     result = await db.execute(select(User).where(User.email == credentials.username))
     if result.scalars().first():
+        print(f"DEBUG: Registration failed for {credentials.username} - already exists")
         raise HTTPException(status_code=400, detail="Email already registered")
     
     # 2. Create User

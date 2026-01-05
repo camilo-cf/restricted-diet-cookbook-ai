@@ -1,27 +1,30 @@
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 from unittest.mock import MagicMock, patch
 
 @pytest.mark.asyncio
-async def test_upload_flow(client: AsyncClient, db_session):
+async def test_upload_flow(client: AsyncClient, db: AsyncSession):
     # 1. Login/Auth Stub
-    # We need to mock get_current_user or actually login in integration tests.
-    # For now, let's override the dependency or seed a user and login.
-    # Overriding dependency is cleaner for unit/integration mix.
-    
     from app.api.deps_auth import get_current_user
     from app.db.models.user import User
     from app.main import app
     import uuid
     
     user_id = uuid.uuid4()
-    mock_user = User(id=user_id, email="test@example.com", is_active=True, hashed_password="hashed", full_name="Test User")
+    mock_user = User(id=user_id, email="test_upload@example.com", is_active=True, hashed_password="hashed", full_name="Test User")
     
+    # We use a selective override for this test
+    # IMPORTANT: We don't call app.dependency_overrides.clear() here 
+    # to avoid breaking the 'db' fixture's own override.
+    # Instead we manually restore it if needed, or better, use a context manager.
+    
+    original_user_deps = app.dependency_overrides.get(get_current_user)
     app.dependency_overrides[get_current_user] = lambda: mock_user
 
     try:
         # 2. Test Presign
-        with patch("app.services.storage_service.storage_service.s3_client.generate_presigned_url") as mock_gen:
+        with patch("app.services.storage_service.storage_service.presign_client.generate_presigned_url") as mock_gen:
             mock_gen.return_value = "http://minio/fake-presigned-url"
             
             payload = {

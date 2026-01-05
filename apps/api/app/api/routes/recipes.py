@@ -32,6 +32,13 @@ class RecipeResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class RecipeCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    ingredients: List[str]
+    instruction_text: str
+    dietary_tags: List[str]
+
 # Helper to map DB model to Response
 def to_recipe_response(recipe: Recipe) -> RecipeResponse:
     image_url = None
@@ -166,6 +173,40 @@ async def update_recipe(
     recipe = result.scalars().first()
 
     return to_recipe_response(recipe)
+
+@router.post("", response_model=RecipeResponse, status_code=status.HTTP_201_CREATED)
+async def create_recipe(
+    recipe_in: RecipeCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Any:
+    """
+    Create a new recipe manually.
+    """
+    # instruction_text is stored as instructions (list) in DB for this project
+    # If the user provides raw text, we might want to split it, 
+    # but for manual create we expect consistency with the model.
+    # The Recipe model uses 'instructions': List[str].
+    # openapi says 'instruction_text' is the field for Create.
+    
+    new_recipe = Recipe(
+        user_id=current_user.id,
+        title=recipe_in.title,
+        description=recipe_in.description or "",
+        ingredients=recipe_in.ingredients,
+        instructions=[s.strip() for s in recipe_in.instruction_text.split(".") if s.strip()],
+        dietary_tags=recipe_in.dietary_tags,
+    )
+    
+    db.add(new_recipe)
+    await db.commit()
+    await db.refresh(new_recipe)
+    
+    # Reload with upload relationship (none for new manual usually, but for consistency)
+    result = await db.execute(select(Recipe).options(selectinload(Recipe.upload)).where(Recipe.id == new_recipe.id))
+    new_recipe = result.scalars().first()
+    
+    return to_recipe_response(new_recipe)
 
 @router.delete("/{id}")
 async def delete_recipe(

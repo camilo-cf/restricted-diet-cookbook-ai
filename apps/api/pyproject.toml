@@ -2,4 +2,4 @@
 addopts = "--cov=app --cov-report=term-missing --cov-report=html --cov-fail-under=70"
 pythonpath = ["."]
 testpaths = ["tests"]
-asyncio_mode = "strict"
+asyncio_mode = "auto"
