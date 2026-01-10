@@ -57,7 +57,7 @@ components:
     # --- Auth ---
     User:
       type: object
-      required: [id, email, full_name, is_active]
+      required: [id, email, full_name, is_active, role]
       properties:
         id:
           $ref: '#/components/schemas/Uuid'
@@ -66,6 +66,18 @@ components:
           format: email
         full_name:
           type: string
+        bio:
+          type: string
+          nullable: true
+        dietaryPreferences:
+          type: array
+          items:
+            type: string
+          nullable: true
+        profileImageUrl:
+          type: string
+          format: uri
+          nullable: true
         is_active:
           type: boolean
         role:

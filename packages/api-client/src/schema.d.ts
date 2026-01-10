@@ -373,12 +373,16 @@ export interface components {
       /** Format: email */
       email: string;
       full_name: string;
+      bio?: string | null;
+      dietaryPreferences?: string[] | null;
+      /** Format: uri */
+      profileImageUrl?: string | null;
       is_active: boolean;
       /**
        * @default user
        * @enum {string}
        */
-      role?: "user" | "admin" | "maintainer";
+      role: "user" | "admin" | "maintainer";
     };
     LoginRequest: {
       /** Format: email */
