@@ -7,14 +7,15 @@ engine_kwargs = {
     "pool_pre_ping": True,
 }
 
-if not settings.DATABASE_URL.startswith("sqlite"):
-    engine_kwargs.update({
-        "pool_size": 5,
-        "max_overflow": 10,
-    })
+# Handle Render's postgres:// URLs and ensure async driver
+database_url = settings.DATABASE_URL
+if database_url.startswith("postgresql://"):
+    database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+elif database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql+asyncpg://", 1)
 
 engine = create_async_engine(
-    settings.DATABASE_URL,
+    database_url,
     **engine_kwargs
 )
 

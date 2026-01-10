@@ -26,12 +26,13 @@ class Settings(BaseSettings):
             return v
         if isinstance(v, str):
             # Try JSON first
-            try:
-                parsed = json.loads(v)
-                if isinstance(parsed, list):
-                    return parsed
-            except json.JSONDecodeError:
-                pass
+            if v.startswith("[") and v.endswith("]"):
+                try:
+                    parsed = json.loads(v)
+                    if isinstance(parsed, list):
+                        return parsed
+                except json.JSONDecodeError:
+                    pass
             # Fall back to comma-separated
             return [origin.strip() for origin in v.split(",") if origin.strip()]
         return v
