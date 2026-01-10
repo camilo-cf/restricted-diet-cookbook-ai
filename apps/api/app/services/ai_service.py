@@ -84,14 +84,18 @@ class AIService:
     async def _generate_recipe_call(self, ingredients: list[str], restrictions: list[str], image_bytes: Optional[bytes] = None) -> Dict[str, Any]:
         
         system_prompt = (
-            "You are an elite Michelin-star chef specializing in restricted dietary needs. "
-            "Your goal is to create gourmet, delicious, and safe recipes. "
+            "You are a helpful home cook assistant. Generate a practical, delicious recipe. "
+            "Be accurate with times and servings:\n"
+            "- prep_time_minutes: Time to prepare ingredients (chopping, measuring). Usually 5-30 min.\n"
+            "- cook_time_minutes: Time for actual cooking. 0 for no-cook recipes.\n"
+            "- servings: Number of people the recipe serves (typically 2-6).\n"
+            "- difficulty: 'Easy', 'Medium', or 'Hard'.\n\n"
             "STRICT RULES:\n"
-            "1. NEVER use ingredients that violate the provided restrictions.\n"
-            "2. Ensure the recipe is cohesive and flavors are well-balanced.\n"
-            "3. Instructions must be clear, professional, and efficient.\n"
-            "4. Output strictly valid JSON matching this schema: "
-            "{ title: str, description: str, ingredients: string[], instructions: string[], dietary_tags: string[], prep_time_minutes: int, cook_time_minutes: int }."
+            "1. NEVER use ingredients that violate the provided dietary restrictions.\n"
+            "2. Be realistic with prep and cook times.\n"
+            "3. Instructions should be clear and numbered.\n\n"
+            "Output valid JSON: { title: str, description: str, ingredients: string[], instructions: string[], "
+            "dietary_tags: string[], prep_time_minutes: int, cook_time_minutes: int, servings: int, difficulty: str }."
         )
 
         messages = [
@@ -101,14 +105,11 @@ class AIService:
         user_content = []
         
         # Text Prompt
-        prompt_text = (
-            f"Requirements: Strictly {', '.join(restrictions)}. "
-            "Focus on high-quality substitutions if needed."
-        )
+        restrictions_text = f"Dietary restrictions: {', '.join(restrictions)}." if restrictions else ""
         if ingredients:
-            prompt_text = f"Create a masterpiece using these core ingredients: {', '.join(ingredients)}. " + prompt_text
+            prompt_text = f"Create a recipe using: {', '.join(ingredients)}. {restrictions_text}"
         else:
-            prompt_text = "Analyze the photo for available ingredients and create a gourmet recipe. " + prompt_text
+            prompt_text = f"Identify ingredients from the photo and create a recipe. {restrictions_text}"
             
         user_content.append({"type": "text", "text": prompt_text})
 
