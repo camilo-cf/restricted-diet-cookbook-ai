@@ -1,7 +1,7 @@
 from typing import Any, List, Optional
 from uuid import UUID
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_
 from sqlalchemy.orm import selectinload
@@ -71,20 +71,32 @@ async def get_recipes(
     db: AsyncSession = Depends(get_db),
     skip: int = 0,
     limit: int = 100,
-    q: Optional[str] = None
+    q: Optional[str] = None,
+    dietary_tags: Optional[str] = Query(None)
 ) -> Any:
     """
-    List public recipes with search.
+    List public recipes with search and filtering.
     """
+    tags_list = dietary_tags.split(",") if dietary_tags else []
     query = select(Recipe).options(selectinload(Recipe.upload))
     
     if q:
-        query = query.where(
-            or_(
-                Recipe.title.ilike(f"%{q}%"),
-                Recipe.description.ilike(f"%{q}%")
-            )
+        from sqlalchemy import cast, String
+        search_filter = or_(
+            Recipe.title.ilike(f"%{q}%"),
+            Recipe.description.ilike(f"%{q}%"),
+            cast(Recipe.ingredients, String).ilike(f"%{q}%"),
+            cast(Recipe.dietary_tags, String).ilike(f"%{q}%")
         )
+        query = query.where(search_filter)
+    
+    if tags_list:
+        from sqlalchemy import cast, String
+        # For JSON columns, we can search for exact matches or use a more complex logic
+        # Overlap is Postgres specific. A more portable way for small sets is multiple ORs or casting.
+        # Since this is a cookbook, let's stick to a robust way.
+        for tag in tags_list:
+             query = query.where(cast(Recipe.dietary_tags, String).ilike(f"%{tag}%"))
     
     # Simple pagination
     query = query.offset(skip).limit(limit)

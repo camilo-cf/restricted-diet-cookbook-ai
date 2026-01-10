@@ -77,3 +77,20 @@ async def generate_recipe_route(
     await db.refresh(new_recipe)
 
     return new_recipe
+class IngredientValidationRequest(BaseModel):
+    ingredients: List[str]
+    restrictions: List[str]
+
+@router.post("/validate", summary="Validate Ingredients")
+async def validate_ingredients_route(
+    payload: IngredientValidationRequest,
+    current_user: User = Depends(get_current_user)
+):
+    try:
+        issues = await ai_service.validate_ingredients(
+            ingredients=payload.ingredients,
+            restrictions=payload.restrictions
+        )
+        return {"issues": issues}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to validate ingredients: {str(e)}")

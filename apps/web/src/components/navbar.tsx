@@ -120,59 +120,81 @@ export function Navbar() {
       </div>
 
       {isOpen && (
-        <div className="sm:hidden border-t">
-          <div className="pt-2 pb-3 space-y-1 px-4 bg-white/80 backdrop-blur-md">
+        <div className="sm:hidden border-t bg-white/95 backdrop-blur-md animate-in slide-in-from-top duration-300">
+          <div className="px-4 pt-4 pb-6 space-y-3">
             <Link 
                 href="/recipes" 
-                className={linkClass("/recipes") + " w-full"}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-all border border-transparent hover:border-emerald-100"
                 onClick={() => setIsOpen(false)}
             >
-              <Search size={16} /> Browse Recipes
+              <div className="bg-emerald-100 p-2 rounded-lg text-emerald-600">
+                <Search size={20} />
+              </div>
+              Browse Recipes
             </Link>
             <Link 
                 href="/wizard" 
-                className={linkClass("/wizard") + " w-full"}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-all border border-transparent hover:border-emerald-100"
                 onClick={() => setIsOpen(false)}
             >
-              <PlusCircle size={16} /> Create Recipe
+              <div className="bg-emerald-100 p-2 rounded-lg text-emerald-600">
+                <PlusCircle size={20} />
+              </div>
+              Create Recipe
             </Link>
+            
+            <div className="my-2 border-t border-gray-100 pt-2" />
+
             {user ? (
-                <>
+                <div className="space-y-3">
                     <Link 
                         href="/profile" 
-                        className={linkClass("/profile") + " w-full"}
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-all border border-transparent hover:border-emerald-100"
                         onClick={() => setIsOpen(false)}
                     >
-                        <UserCircle size={16} /> My Profile
+                        <div className="h-9 w-9 rounded-lg overflow-hidden bg-emerald-100 text-emerald-700 flex items-center justify-center border border-white shadow-sm">
+                            {user.profileImageUrl ? (
+                                <img src={user.profileImageUrl} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                                <span className="font-bold text-sm">{user.full_name[0]}</span>
+                            )}
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-sm font-bold leading-none">{user.full_name}</span>
+                            <span className="text-xs text-slate-500 font-normal mt-1">View Profile</span>
+                        </div>
                     </Link>
                     <button 
-                        className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 w-full text-left"
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold text-red-600 hover:bg-red-50 w-full text-left transition-all border border-transparent hover:border-red-100"
                         onClick={async () => {
                             await api.POST("/auth/logout");
                             window.location.href = "/";
                             setIsOpen(false);
                         }}
                     >
-                        <LogOut size={16} /> Log Out
+                        <div className="bg-red-100 p-2 rounded-lg text-red-600">
+                            <LogOut size={20} />
+                        </div>
+                        Log Out
                     </button>
-                </>
+                </div>
             ) : (
-                <>
+                <div className="grid grid-cols-2 gap-3 pt-2">
                     <Link 
                         href="/login" 
-                        className={linkClass("/login") + " w-full"}
+                        className="flex items-center justify-center h-12 rounded-xl text-base font-bold text-slate-700 border border-slate-200 bg-white hover:bg-slate-50 transition-all"
                         onClick={() => setIsOpen(false)}
                     >
-                        Sign In
+                        Log In
                     </Link>
                     <Link 
                         href="/register" 
-                        className={linkClass("/register") + " w-full"}
+                        className="flex items-center justify-center h-12 rounded-xl text-base font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-200 transition-all"
                         onClick={() => setIsOpen(false)}
                     >
                         Sign Up
                     </Link>
-                </>
+                </div>
             )}
           </div>
         </div>

@@ -72,22 +72,22 @@ export default function Home() {
         <h2 className="text-3xl font-bold text-center text-gray-900 mb-16 font-brand">
           How It Works
         </h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
           {features.map((feature, index) => (
             <div
               key={feature.title}
-              className="bg-white/50 backdrop-blur-sm p-8 rounded-3xl border border-gray-100 hover:border-emerald-200 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-500 text-center group"
+              className="bg-white/50 backdrop-blur-sm p-6 md:p-8 rounded-3xl border border-gray-100 hover:border-emerald-200 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-500 text-center group"
             >
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-50 to-teal-50 text-emerald-600 rounded-2xl mb-6 group-hover:scale-110 transition-transform duration-300">
-                <feature.icon size={28} />
+              <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-emerald-50 to-teal-50 text-emerald-600 rounded-2xl mb-6 group-hover:scale-110 transition-transform duration-300">
+                <feature.icon size={feature.icon === Sparkles ? 24 : 28} />
               </div>
-              <div className="text-sm font-semibold text-emerald-600 mb-2">
+              <div className="text-xs font-semibold text-emerald-600 mb-2 uppercase tracking-wider">
                 Step {index + 1}
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-bold text-gray-900 mb-2">
                 {feature.title}
               </h3>
-              <p className="text-gray-600 text-sm">{feature.description}</p>
+              <p className="text-gray-500 text-sm leading-relaxed">{feature.description}</p>
             </div>
           ))}
         </div>

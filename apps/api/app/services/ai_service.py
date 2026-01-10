@@ -36,6 +36,36 @@ class AIService:
             logger.error("recipe_generation_failed", error=str(e))
             raise e
 
+    async def validate_ingredients(self, ingredients: list[str], restrictions: list[str]) -> list[Dict[str, str]]:
+        """
+        Validates a list of ingredients against dietary restrictions.
+        Returns a list of issues found.
+        """
+        if not ingredients or not restrictions:
+            return []
+
+        # 1. Cost Guard Check
+        if not cost_guard.can_proceed(estimated_cost=0.01):
+            logger.warning("cost_guard_blocked", monthly_limit=cost_guard.monthly_limit_usd)
+            raise Exception("Monthly cost limit exceeded")
+
+        messages = [
+            {"role": "system", "content": "You are a food safety and nutrition expert. Check if the given ingredients violate the specified dietary restrictions. Output valid JSON: { \"issues\": [ { \"ingredient\": string, \"issue\": string, \"suggestion\": string } ] }. If no issues, return an empty list for \"issues\"."}
+        ]
+        
+        prompt = f"Ingredients: {', '.join(ingredients)}\nRestrictions: {', '.join(restrictions)}"
+        messages.append({"role": "user", "content": prompt})
+
+        response = await self.client.chat.completions.create(
+            model="gpt-4o-mini", # Use a cheaper model for validation
+            messages=messages,
+            response_format={ "type": "json_object" }
+        )
+
+        content = response.choices[0].message.content
+        data = json.loads(content)
+        return data.get("issues", [])
+
     @retry(
         stop=stop_after_attempt(2), 
         wait=wait_exponential(multiplier=1, min=1, max=4),

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { Navbar } from "./navbar";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { api } from "@/lib/api";
@@ -52,6 +52,25 @@ describe("Navbar Component", () => {
       // Logout button has the LogOut icon, we can check for its presence via aria or test-id if added, 
       // but checking for the name is safer if we use accessible text.
       // In our code it's just an icon.
+    });
+  });
+
+  it("opens mobile menu and shows links", async () => {
+    (api.GET as any).mockResolvedValue({ data: null, error: { status: 401 } });
+    render(<Navbar />);
+    
+    // The menu button is the only button with the Menu icon (Lucide)
+    // We can find it by its role or just click the button that's not the desktop ones
+    const buttons = screen.getAllByRole("button");
+    const menuButton = buttons.find(b => b.className.includes("sm:hidden") || b.querySelector("svg"));
+    
+    if (menuButton) {
+        fireEvent.click(menuButton);
+    }
+    
+    await waitFor(() => {
+        expect(screen.getByText(/Browse Recipes/i)).toBeInTheDocument();
+        expect(screen.getByText(/Create Recipe/i)).toBeInTheDocument();
     });
   });
 });
