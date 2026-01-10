@@ -93,7 +93,7 @@ jobs:
         run: docker compose up -d db minio backend frontend
 
       - name: Run Backend Tests
-        run: docker compose exec -T backend pytest
+        run: docker compose exec -T backend pytest --no-cov
 
       - name: Run Frontend Tests
         run: |
