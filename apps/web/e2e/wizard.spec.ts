@@ -1,7 +1,16 @@
 import { test, expect } from '@playwright/test';
 
 test('Wizard Flow: Ingredients -> Review -> Result', async ({ page }) => {
-  // 1. Start at wizard
+  // 1. Log in first (Wizard is protected)
+  await page.goto('/login');
+  await page.fill('input[name="username"]', 'demo@example.com');
+  await page.fill('input[name="password"]', 'password');
+  await page.click('button[type="submit"]');
+  
+  // Wait for login redirect
+  await page.waitForURL(/\/recipes/);
+
+  // 2. Start at wizard
   await page.goto('/wizard');
   await expect(page).toHaveURL(/\/wizard\/ingredients/, { timeout: 30000 });
 

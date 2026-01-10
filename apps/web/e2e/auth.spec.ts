@@ -12,8 +12,8 @@ test.describe('Authentication Flow', () => {
     await page.fill('input[name="password"]', password);
     await page.click('button[type="submit"]');
 
-    // 2. Should redirect to login or dashboard
-    await expect(page).toHaveURL(/\/(auth\/login|wizard)/, { timeout: 10000 });
+    // 2. Should redirect to login or recipes/wizard
+    await expect(page).toHaveURL(/\/(auth\/login|recipes|wizard)/, { timeout: 10000 });
 
     // 3. Login
     if (page.url().includes('login')) {
