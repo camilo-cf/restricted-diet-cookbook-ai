@@ -29,6 +29,9 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Create dummy .env
+        run: touch .env
+
       - name: 1. Contract Validation
         run: |
           npm install -g @stoplight/spectral-cli
@@ -71,6 +74,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Create dummy .env
+        run: touch .env
+
       - name: Start Full Stack
         run: docker compose up -d db minio backend frontend
 
