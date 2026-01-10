@@ -59,8 +59,7 @@ async def create_presigned_url(
 
     # Calculate image URL for preview
     if settings.STORAGE_BACKEND == "disk":
-        public_api_url = os.getenv("NEXT_PUBLIC_API_URL", "http://localhost:8000")
-        image_url = f"{public_api_url}/uploads/content/{object_key}"
+        image_url = f"{settings.PUBLIC_API_URL}/uploads/content/{object_key}"
     else:
         base_url = settings.PUBLIC_AWS_ENDPOINT_URL or settings.AWS_ENDPOINT_URL
         image_url = f"{base_url}/{settings.AWS_BUCKET_NAME}/{object_key}"

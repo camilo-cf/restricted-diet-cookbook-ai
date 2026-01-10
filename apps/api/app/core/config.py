@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = ""
     POSTGRES_DB: str = ""
     
+    # API
+    PUBLIC_API_URL: str = "http://localhost:8000"
+    
     # Security
     SECRET_KEY: str
     ALGORITHM: str = "HS256"

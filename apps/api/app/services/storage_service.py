@@ -131,8 +131,7 @@ class DiskStorageService(StorageServiceBase):
         # For simplicity, we point to /uploads/direct-upload/{object_name}
         # The frontend will need to know if it's using S3 or Disk to handle the PUT.
         # BUT the contract says "PUT to presigned URL". So we'll provide a URL that our API handles.
-        public_api_url = os.getenv("NEXT_PUBLIC_API_URL", "http://localhost:8000")
-        return f"{public_api_url}/uploads/direct-upload/{object_name}"
+        return f"{settings.PUBLIC_API_URL}/uploads/direct-upload/{object_name}"
 
     def verify_upload(self, object_name: str, expected_size_max: int = 8388608) -> bool:
         file_path = os.path.join(self.upload_dir, object_name)
