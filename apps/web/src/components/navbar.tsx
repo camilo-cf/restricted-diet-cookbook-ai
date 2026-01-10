@@ -17,8 +17,14 @@ export function Navbar() {
     const fetchUser = async () => {
         try {
             const { data, error } = await api.GET("/auth/me");
-            if (!error) setUser(data);
-        } catch (e) {} finally {
+            if (!error) {
+                setUser(data);
+            } else {
+                setUser(null);
+            }
+        } catch (e) {
+            setUser(null);
+        } finally {
             setLoading(false);
         }
     };

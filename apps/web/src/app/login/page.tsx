@@ -44,8 +44,7 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/wizard");
-      router.refresh(); 
+      window.location.href = "/wizard";
     } catch (err) {
       setError("An unexpected error occurred");
       console.error(err);

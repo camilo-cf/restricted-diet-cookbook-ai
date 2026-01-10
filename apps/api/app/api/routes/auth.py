@@ -139,7 +139,13 @@ async def login(
 
 @router.post("/logout")
 async def logout(response: Response):
-    response.delete_cookie(key="session_id", httponly=True, samesite="lax")
+    # Use SameSite=None and Secure=True to match the login cookie attributes
+    response.delete_cookie(
+        key="session_id", 
+        httponly=True, 
+        samesite="none", 
+        secure=True
+    )
     return {"message": "Logout successful"}
 
 @router.get("/me", response_model=UserResponse)
