@@ -43,9 +43,9 @@ export function Navbar() {
         <div className="flex justify-between h-16">
           <div className="flex">
             <Link href="/" className="flex-shrink-0 flex items-center gap-2 group">
-               <div className="bg-emerald-600 text-white p-2 rounded-xl transition-transform group-hover:scale-110 duration-300 shadow-lg shadow-emerald-500/20">
-                  <ChefHat size={22} />
-               </div>
+                <div className="bg-emerald-600 text-white p-2 rounded-xl transition-transform group-hover:scale-110 duration-300 shadow-lg shadow-emerald-500/20">
+                   <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chef-hat "><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"></path><line x1="6" x2="18" y1="17" y2="17"></line></svg>
+                </div>
                <span className="font-bold text-xl text-gray-900 hidden lg:block tracking-tight font-brand">
                   Restricted Diet <span className="text-emerald-600">Cookbook AI</span>
                </span>

@@ -125,19 +125,26 @@ class AIService:
 
         messages.append({"role": "user", "content": user_content})
         
-        response = await self.client.chat.completions.create(
-            model=self.model,
-            messages=messages,
-            timeout=45.0, # Vision takes longer
-            response_format={ "type": "json_object" }
-        )
-        
-        # Track Usage
-        usage = response.usage
-        if usage:
-            cost_guard.record_usage(usage.prompt_tokens, usage.completion_tokens, self.model)
+        try:
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                timeout=45.0, # Vision takes longer
+                response_format={ "type": "json_object" }
+            )
             
-        content = response.choices[0].message.content
-        return json.loads(content)
+            # Track Usage
+            usage = response.usage
+            if usage:
+                cost_guard.record_usage(usage.prompt_tokens, usage.completion_tokens, self.model)
+                
+            content = response.choices[0].message.content
+            print(f"DEBUG: AI RAW CONTENT: {content}")
+            return json.loads(content)
+        except Exception as e:
+            import traceback
+            print(f"ERROR IN AI CALL: {str(e)}")
+            traceback.print_exc()
+            raise e
 
 ai_service = AIService()
