@@ -164,12 +164,12 @@ export default function RecipeDetail() {
           <div className="bg-white p-4 rounded-xl border shadow-sm text-center">
               <Users className="w-6 h-6 mx-auto text-blue-500 mb-2" />
               <div className="text-xs text-muted-foreground uppercase font-semibold tracking-wider">Servings</div>
-              <div className="font-bold text-lg">2</div>
+              <div className="font-bold text-lg">{recipe.servings || "2-4"}</div>
           </div>
           <div className="bg-white p-4 rounded-xl border shadow-sm text-center">
               <ChefHat className="w-6 h-6 mx-auto text-purple-500 mb-2" />
               <div className="text-xs text-muted-foreground uppercase font-semibold tracking-wider">Difficulty</div>
-              <div className="font-bold text-lg">Medium</div>
+              <div className="font-bold text-lg">{recipe.difficulty || "Medium"}</div>
           </div>
       </div>
 

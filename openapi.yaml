@@ -171,6 +171,11 @@ components:
           type: integer
         cookTimeMinutes:
           type: integer
+        servings:
+          type: integer
+        difficulty:
+          type: string
+          enum: [Easy, Medium, Hard]
         calories:
           type: integer
         created_at:

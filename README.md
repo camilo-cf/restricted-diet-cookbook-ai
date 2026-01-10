@@ -6,15 +6,20 @@
 ---
 
 ## 🎯 Problem & Solution
-Navigating a restricted diet (allergies, intolerances, or specific lifestyles like Keto/Vegan) often means settling for generic recipes or spending hours manually filtering search results. The challenge is finding a meal that is both **safe** and **achievable** with the ingredients currently in your pantry.
+### The Problem
+Cooking with dietary restrictions is a mental minefield. Whether it's **Celiac disease (Gluten-free)**, **Type 2 Diabetes (Sugar-free)**, or lifestyle choices like **Keto** or **Veganism**, the friction of finding safe recipes is immense. Users often find themselves:
+- Settling for generic, bland meals that "tick the boxes" but lack culinary soul.
+- Spending excessive time manually scouring ingredient lists for "hidden" violations (e.g., soy sauce containing gluten).
+- Staring at a random assortment of fridge ingredients without a clear, safe path to a meal.
 
-**Cookbook AI** delivers a professional, engineering-first solution:
-1.  **Visual Ingredient Capture**: Snap a photo of your fridge or pantry to automatically identify base ingredients (Vision-Powered Simulation).
-2.  **Hard Constraint Enforcement**: A strict dietary profile ensures the AI honors your restrictions—guaranteeing personal safety and culinary trust.
-3.  **Tailored Gourmet Generation**: Leveraging OpenAI GPT-4o with structured output to produce high-quality, chef-grade recipes in seconds.
-4.  **The Showcase Loop**: Document your success by uploading photos of your final cooked dishes, building a personalized gallery of safe culinary wins.
+### The Solution: Cookbook AI
+**Cookbook AI** leverages Advanced Agentic AI to transform this experience into a safe, creative, and efficient workflow:
+1.  **Visual Intelligence**: Snap a photo of your available ingredients. The system identifies them and uses them as the base for your meal.
+2.  **Safety-First Validation**: Our AI performs a "double-check" against your specific restrictions, flagging hidden allergens and proposing safe, gourmet substitutions.
+3.  **Michelin-Star Logic**: Unlike generic chatbots, our system is tuned with a chef-centric persona to ensure flavors are balanced, techniques are professional, and results are delicious.
+4.  **Gallery of Success**: Users can build a personal repository of verified safe recipes, complete with photos of their own successful dishes.
 
-**Live Demo**: [https://cookbook-frontend-k5lz.onrender.com](https://cookbook-frontend-k5lz.onrender.com) (Deployed on Render)
+**Live Demo**: [https://cookbook-frontend-k5lz.onrender.com](https://cookbook-frontend-k5lz.onrender.com)
 
 ---
 
@@ -155,15 +160,14 @@ This section maps project components to the [Course Rubric](https://github.com/D
 
 | Criterion | Evidence / Path | Verification Command |
 | :--- | :--- | :--- |
-| **1. Problem Definition** | [PRD.md](docs/PRD.md#1-problem-statement) | N/A (Doc Review) |
-| **2. Interface** | [demo-script.md](presentation/demo-script.md) | `npm run dev` (Local UI) |
-| **3. Data Ingestion** | [uploads.py (L70)](apps/api/app/api/routes/uploads.py#L70) | `curl /health` (Storage Check) |
-| **4. Monitoring** | [VERIFICATION.md](docs/VERIFICATION.md) | View [JSON Log Proof](docs/VERIFICATION.md#1-structured-logging--request_id) |
-| **5. Reproducibility** | [README.md](#-local-development-fresh-clone-guide) | `./run.sh dev` |
-| **6. Testing** | [VERIFICATION.md](docs/VERIFICATION.md#3-test-coverage) | `./run.sh test` |
-| **7. Best Practices** | [ADR 0001](docs/adr/0001-contract-first-openapi.md) | `pnpm client:check` |
-| **8. Documentation** | `docs/` folder | Link review in README |
-| **9. Deployment** | [render.yaml](render.yaml) | Check [Live Demo](#-live-demo) |
+| **1. Problem Definition** | [README.md](#🎯-problem--solution) | N/A (Doc Review) |
+| **2. AI Core Logic** | [AGENTS.md](AGENTS.md) | View [Prompts & MCP](AGENTS.md#-model-context-protocol-mcp) |
+| **3. API Contract** | [openapi.yaml](openapi.yaml) | `pnpm client:check` |
+| **4. Backend Tests** | [VERIFICATION.md](docs/VERIFICATION.md#3-test-coverage) | `./run.sh test` (Pytest) |
+| **5. Frontend Tests** | [VERIFICATION.md](docs/VERIFICATION.md#3-test-coverage) | `./run.sh test` (Vitest) |
+| **6. Integration Tests** | [INTEGRATION_TESTS.md](docs/INTEGRATION_TESTS.md) | `pnpm --filter frontend e2e` |
+| **7. Reproducibility** | [README.md](#🚀-local-development-fresh-clone-guide) | `./run.sh dev` |
+| **8. Deployment** | [render.yaml](render.yaml) | [Live URL](#-live-demo) |
 
 ---
 

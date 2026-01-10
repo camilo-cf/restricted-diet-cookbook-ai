@@ -163,7 +163,7 @@ function RecipeExplorerContent() {
                                 </span>
                                 <span className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-lg">
                                     <Users size={16} className="text-emerald-500" /> 
-                                    2-4 servings
+                                    {recipe.servings || "2-4"} servings
                                 </span>
                              </div>
                              <p className="line-clamp-2 text-slate-500 leading-relaxed italic">

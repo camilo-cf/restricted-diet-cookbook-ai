@@ -447,6 +447,9 @@ export interface components {
       dietaryTags: components["schemas"]["DietaryRestriction"][];
       prepTimeMinutes?: number;
       cookTimeMinutes?: number;
+      servings?: number;
+      /** @enum {string} */
+      difficulty?: "Easy" | "Medium" | "Hard";
       calories?: number;
       created_at: components["schemas"]["Timestamp"];
       /** Format: uri */

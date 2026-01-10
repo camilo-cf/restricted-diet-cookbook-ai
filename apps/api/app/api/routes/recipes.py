@@ -25,6 +25,8 @@ class RecipeResponse(BaseModel):
     dietaryTags: List[str] = []
     prepTimeMinutes: Optional[int] = None
     cookTimeMinutes: Optional[int] = None
+    servings: Optional[int] = None
+    difficulty: Optional[str] = None
     calories: Optional[int] = None
     created_at: datetime
     imageUrl: Optional[str] = None
@@ -60,6 +62,8 @@ def to_recipe_response(recipe: Recipe) -> RecipeResponse:
         dietaryTags=recipe.dietary_tags or [],
         prepTimeMinutes=recipe.prep_time_minutes,
         cookTimeMinutes=recipe.cook_time_minutes,
+        servings=getattr(recipe, "servings", None),
+        difficulty=getattr(recipe, "difficulty", None),
         calories=None, # Not in DB yet
         created_at=recipe.created_at,
         imageUrl=image_url,

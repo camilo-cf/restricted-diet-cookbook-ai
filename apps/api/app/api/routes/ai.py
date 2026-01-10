@@ -70,7 +70,9 @@ async def generate_recipe_route(
         instructions=recipe_data.get("instructions", []),
         dietary_tags=recipe_data.get("dietary_tags", []),
         prep_time_minutes=recipe_data.get("prep_time_minutes"),
-        cook_time_minutes=recipe_data.get("cook_time_minutes")
+        cook_time_minutes=recipe_data.get("cook_time_minutes"),
+        servings=recipe_data.get("servings"),
+        difficulty=recipe_data.get("difficulty")
     )
     
     db.add(new_recipe)

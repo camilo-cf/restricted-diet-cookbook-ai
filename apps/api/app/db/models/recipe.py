@@ -25,6 +25,8 @@ class Recipe(Base):
     
     prep_time_minutes: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     cook_time_minutes: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    servings: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    difficulty: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
