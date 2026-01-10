@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { api } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import Link from "next/link";
 import { Search, Clock, Users, ChefHat } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 
-export default function RecipeExplorer() {
+function RecipeExplorerContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const initialQuery = searchParams.get("q") || "";
@@ -122,5 +122,13 @@ export default function RecipeExplorer() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function RecipeExplorer() {
+  return (
+    <Suspense fallback={<div className="text-center py-20 text-muted-foreground">Loading...</div>}>
+      <RecipeExplorerContent />
+    </Suspense>
   );
 }
