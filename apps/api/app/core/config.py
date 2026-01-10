@@ -1,5 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import List
+from pydantic import field_validator
+from typing import List, Union
+import json
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Restricted Diet Cookbook AI"
@@ -7,15 +9,32 @@ class Settings(BaseSettings):
     
     # Database
     DATABASE_URL: str
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: str
-    POSTGRES_DB: str
+    POSTGRES_USER: str = ""
+    POSTGRES_PASSWORD: str = ""
+    POSTGRES_DB: str = ""
     
     # Security
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000", "http://127.0.0.1:3001"]
+    
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+        if isinstance(v, list):
+            return v
+        if isinstance(v, str):
+            # Try JSON first
+            try:
+                parsed = json.loads(v)
+                if isinstance(parsed, list):
+                    return parsed
+            except json.JSONDecodeError:
+                pass
+            # Fall back to comma-separated
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v
     
     # Storage
     STORAGE_BACKEND: str = "minio" # minio | disk
