@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     AWS_ENDPOINT_URL: str = ""
     PUBLIC_AWS_ENDPOINT_URL: str = "" # Defaults to AWS_ENDPOINT_URL if not set
     # AI
-    OPENAI_API_KEY: str
+    OPENAI_API_KEY: str = ""
 
     model_config = SettingsConfigDict(
         env_file=".env", 

@@ -54,7 +54,7 @@ app = FastAPI(
 # Middleware order: Security Headers -> Request ID -> Logging -> CORS -> Trusted Host
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RequestIDMiddleware)
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "*.render.com"])
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
 
 if settings.CORS_ORIGINS:
     print(f"DEBUG: Loading CORS_ORIGINS: {settings.CORS_ORIGINS}")
