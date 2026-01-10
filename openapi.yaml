@@ -348,6 +348,34 @@ paths:
                 $ref: '#/components/schemas/User'
         '401':
           description: Not logged in
+    
+    patch:
+      summary: Update Current User Profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                full_name:
+                  type: string
+                bio:
+                  type: string
+                dietaryPreferences:
+                  type: array
+                  items:
+                    type: string
+                profileImageId:
+                  $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Not logged in
 
   /auth/csrf:
     get:

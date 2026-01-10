@@ -80,6 +80,31 @@ export interface paths {
         };
       };
     };
+    /** Update Current User Profile */
+    patch: {
+      requestBody?: {
+        content: {
+          "application/json": {
+            full_name?: string;
+            bio?: string;
+            dietaryPreferences?: string[];
+            profileImageId?: components["schemas"]["Uuid"];
+          };
+        };
+      };
+      responses: {
+        /** @description Profile updated */
+        200: {
+          content: {
+            "application/json": components["schemas"]["User"];
+          };
+        };
+        /** @description Not logged in */
+        401: {
+          content: never;
+        };
+      };
+    };
   };
   "/auth/csrf": {
     /**
