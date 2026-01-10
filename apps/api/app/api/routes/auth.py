@@ -211,8 +211,26 @@ async def delete_user_me(
     if current_user.email == "demo@example.com":
         raise HTTPException(status_code=403, detail="Cannot delete demo account")
 
-    await db.delete(current_user)
-    await db.commit()
+    try:
+        from app.db.models.upload import Upload
+        from sqlalchemy import delete
+        
+        # 1. Break circular dependency if any (User.profile_image_id -> Upload.id)
+        current_user.profile_image_id = None
+        db.add(current_user)
+        await db.commit() # Commit to release the FK constraint
+        
+        # 2. Delete all uploads by this user
+        # Note: In a real app, you should also delete files from storage here
+        await db.execute(delete(Upload).where(Upload.user_id == current_user.id))
+        
+        # 3. Delete the user
+        # Recipes will be deleted automatically due to cascade="all, delete-orphan" on User.recipes
+        await db.delete(current_user)
+        await db.commit()
+    except Exception as e:
+        print(f"Error deleting user: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to delete account data")
     
     # Clear session cookie
     response.delete_cookie(key=settings.SESSION_COOKIE_NAME)
