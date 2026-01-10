@@ -59,23 +59,25 @@ export default function WizardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-gray-50/50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
-            Create Your Recipe
-          </h1>
-          <p className="text-muted-foreground mt-2">
-              Follow the steps to generate your personalized meal
-          </p>
-        </div>
-        
-        <WizardProgress />
-        
-        <div className="bg-card text-card-foreground p-6 md:p-8 rounded-2xl shadow-xl shadow-primary/5 border animate-in slide-up">
-          {children}
+    <WizardProvider>
+      <div className="min-h-screen bg-gray-50/50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-10">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
+              Create Your Recipe
+            </h1>
+            <p className="text-muted-foreground mt-2">
+                Follow the steps to generate your personalized meal
+            </p>
+          </div>
+          
+          <WizardProgress />
+          
+          <div className="bg-card text-card-foreground p-6 md:p-8 rounded-2xl shadow-xl shadow-primary/5 border animate-in slide-up">
+            {children}
+          </div>
         </div>
       </div>
-    </div>
+    </WizardProvider>
   );
 }

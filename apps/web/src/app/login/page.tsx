@@ -44,7 +44,7 @@ export default function LoginPage() {
         return;
       }
 
-      window.location.href = "/wizard";
+      window.location.href = "/recipes";
     } catch (err) {
       setError("An unexpected error occurred");
       console.error(err);
