@@ -3,7 +3,8 @@ name: restricted-diet-cookbook-ai
 services:
   backend:
     build:
-      context: ./apps/api
+      context: .
+      dockerfile: apps/api/Dockerfile
     container_name: cookbook-backend
     ports:
       - "8000:8000"

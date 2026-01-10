@@ -22,8 +22,8 @@ services:
     runtime: docker
     region: oregon
     plan: free
-    dockerContext: ./apps/api
-    dockerfilePath: Dockerfile
+    dockerContext: .
+    dockerfilePath: ./apps/api/Dockerfile
     healthCheckPath: /health
     numInstances: 1
     envVars:

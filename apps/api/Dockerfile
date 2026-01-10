@@ -9,7 +9,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends gcc libpq-dev && \
     rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+COPY apps/api/requirements.txt .
 RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt
 
 FROM python:3.11.8-slim-bookworm
@@ -25,7 +25,7 @@ COPY --from=builder /app/requirements.txt .
 
 RUN pip install --no-cache /wheels/*
 
-COPY . .
+COPY apps/api/ .
 
 # Add non-root user
 RUN adduser --disabled-password --gecos '' appuser && \
