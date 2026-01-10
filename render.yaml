@@ -41,9 +41,11 @@ services:
         value: "/app/uploads"
       - key: CORS_ORIGINS
         value: https://cookbook-frontend.onrender.com
-      # API Key must be set manually in Render Dashboard for security
+      # API Key and Secret Key must be set manually in Render Dashboard for security
       - key: OPENAI_API_KEY
         sync: false
+      - key: SECRET_KEY
+        generateValue: true
 
 databases:
   # --------------------------------------------------------------------------------
