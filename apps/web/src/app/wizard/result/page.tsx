@@ -53,7 +53,7 @@ export default function ResultPage() {
       setResultPhotoId(data.uploadId);
       setPreviewUrl(data.photoPreview || null);
     }
-  }, [data.uploadId, data.photoPreview]);
+  }, [data.uploadId, data.photoPreview, resultPhotoId]);
 
   const handleResultPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!e.target.files?.[0]) return;
