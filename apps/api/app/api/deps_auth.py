@@ -9,9 +9,6 @@ from app.core.security import verify_token
 # We need to create security.py with verify_token first or imports fail.
 # I will create a stub here and then implement security.py properly.
 
-async def get_db():
-    async with AsyncSessionLocal() as session:
-        yield session
 
 async def get_current_user(request: Request, db: AsyncSession = Depends(get_db)) -> User:
     # 1. Get session_id from strict httpOnly cookie
@@ -29,7 +26,9 @@ async def get_current_user(request: Request, db: AsyncSession = Depends(get_db))
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid session")
 
     # 3. Get user from DB
-    user = await db.get(User, user_id)
+    import uuid
+    uid = uuid.UUID(user_id)
+    user = await db.get(User, uid)
     if not user:
          raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
     

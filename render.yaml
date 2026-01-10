@@ -9,7 +9,7 @@ services:
     plan: free
     context: .
     dockerfilePath: ./apps/web/Dockerfile
-    healthCheckPath: /health
+    healthCheckPath: /
     envVars:
       - key: NEXT_PUBLIC_API_URL
         fromService:
@@ -29,6 +29,10 @@ services:
     dockerfilePath: ./apps/api/Dockerfile
     healthCheckPath: /health
     numInstances: 1
+    disk:
+      name: uploads-data
+      mountPath: /app/uploads
+      sizeGB: 1
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -38,30 +42,10 @@ services:
         value: "5"
       - key: DB_TIMEOUT
         value: "30"
-      - key: AWS_ACCESS_KEY_ID
-        fromService:
-          type: web
-          name: cookbook-minio
-          envVarKey: MINIO_ROOT_USER
-      - key: AWS_SECRET_ACCESS_KEY
-        fromService:
-          type: web
-          name: cookbook-minio
-          envVarKey: MINIO_ROOT_PASSWORD
-      - key: AWS_ENDPOINT_URL
-        fromService:
-          type: web
-          name: cookbook-minio
-          property: url
-      - key: PUBLIC_AWS_ENDPOINT_URL
-        fromService:
-          type: web
-          name: cookbook-minio
-          property: url
-      - key: AWS_BUCKET_NAME
-        value: "uploads"
-      - key: AWS_REGION
-        value: "us-east-1"
+      - key: STORAGE_BACKEND
+        value: "disk"
+      - key: UPLOAD_DIR
+        value: "/app/uploads"
       - key: CORS_ORIGINS
         fromService:
           type: web
@@ -70,27 +54,6 @@ services:
       # API Key must be set manually in Render Dashboard for security
       - key: OPENAI_API_KEY
         sync: false
-
-  # --------------------------------------------------------------------------------
-  # STORAGE (MinIO)
-  # --------------------------------------------------------------------------------
-  # Note: MinIO needs to be a Web Service (not Private) for Presigned URLs to work from the browser.
-  - type: web
-    name: cookbook-minio
-    runtime: image
-    image: minio/minio:RELEASE.2024-01-31T20-20-33Z
-    region: oregon
-    plan: free
-    disk:
-      name: minio-data
-      mountPath: /data
-      sizeGB: 1
-    startCommand: minio server /data --console-address ":9001"
-    envVars:
-      - key: MINIO_ROOT_USER
-        generateValue: true
-      - key: MINIO_ROOT_PASSWORD
-        generateValue: true
 
 databases:
   # --------------------------------------------------------------------------------

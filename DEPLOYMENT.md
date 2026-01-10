@@ -20,11 +20,12 @@ The application uses **S3 Presigned URLs** for direct browser uploads. This requ
 
 | Variable | Description | Example |
 | :--- | :--- | :--- |
-| `AWS_ENDPOINT_URL` | **Internal** endpoint used by the Backend to talk to the bucket (e.g., via Docker bridge). | `http://minio:9000` |
-| `PUBLIC_AWS_ENDPOINT_URL` | **Public** endpoint used by the Browser to upload the file (e.g., via Internet). | `https://storage.example.com` |
+| `STORAGE_BACKEND` | Switch between `minio` (S3) or `disk` (Local). | `disk` |
+| `AWS_ENDPOINT_URL` | **Internal** endpoint used by the Backend to talk to the bucket. | `http://minio:9000` |
+| `PUBLIC_AWS_ENDPOINT_URL` | **Public** endpoint used by the Browser to upload the file. | `https://storage.example.com` |
 
 > [!IMPORTANT]
-> If `PUBLIC_AWS_ENDPOINT_URL` is not set, it defaults to `AWS_ENDPOINT_URL`. In production environments with external storage providers (like AWS S3), both should point to the regional S3 endpoint (e.g., `https://s3.us-east-1.amazonaws.com`).
+> **Render Free Tier Storage**: Since persistent disks are not available for free web services, the `STORAGE_BACKEND=minio` (connecting to a separate MinIO service with its own disk) is preferred. However, `STORAGE_BACKEND=disk` is implemented as a minimal fallback (ephemeral storage).
 
 ---
 

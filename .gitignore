@@ -17,4 +17,6 @@ venv
 .mypy_cache
 playwright-report
 test-results
-*.log
+*.log*.db
+*.sqlite
+uploads/

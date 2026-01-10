@@ -30,9 +30,7 @@ app = FastAPI(
 )
 
 # Middleware
-import os
-if os.getenv("TESTING") != "True":
-    app.add_middleware(RequestIDMiddleware)
+app.add_middleware(RequestIDMiddleware)
 
 if settings.CORS_ORIGINS:
     app.add_middleware(

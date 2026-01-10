@@ -5,6 +5,9 @@ from unittest.mock import MagicMock, patch
 
 @pytest.mark.asyncio
 async def test_upload_flow(client: AsyncClient, db: AsyncSession):
+    from app.core.config import settings
+    if settings.STORAGE_BACKEND != "minio":
+        pytest.skip("This test specifically mocks S3/MinIO client")
     # 1. Login/Auth Stub
     from app.api.deps_auth import get_current_user
     from app.db.models.user import User

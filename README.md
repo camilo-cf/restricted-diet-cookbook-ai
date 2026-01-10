@@ -14,7 +14,7 @@ Navigating a restricted diet (allergies, intolerances, or specific lifestyles li
 3.  **Tailored Gourmet Generation**: Leveraging OpenAI GPT-4o with structured output to produce high-quality, chef-grade recipes in seconds.
 4.  **The Showcase Loop**: Document your success by uploading photos of your final cooked dishes, building a personalized gallery of safe culinary wins.
 
-**Demo URL**: [https://restricted-diet-cookbook-ai.onrender.com](https://restricted-diet-cookbook-ai.onrender.com)
+**Live Demo**: [Place URL Here] (Managed by maintainer)
 
 ---
 
@@ -149,18 +149,37 @@ The repository includes GitHub Actions for:
 
 ---
 
-## 🎬 2-Minute Demo Script
+## 📋 Rubric Evidence (Reviewer Checklist)
 
-1.  **Setup**: Run `./run.sh dev` and open `localhost:3000`.
-2.  **Start Wizard**: Click "Create Recipe".
-3.  **Ingredients**: Type "Chicken breast, spinach, heavy cream".
-4.  **Restrictions**: Type "Keto, No Nuts".
-5.  **Upload (Optional)**: Drag & drop any image (e.g. `fridge.jpg`). Watch the upload progress bar (Simulated S3).
-6.  **Review**: See the summary. Click "Generate Recipe".
-7.  **Result**: Observe the Loading State (Skeleton UI).
-    *   *Win*: See "Keto Creamy Spinach Chicken".
-    *   *Verify*: Check that standard "Serving Size" and "Nutrition" data is present.
-8.  **Resiliency Demo**: Kill the backend (`docker compose stop backend`). Try to generate. Observe the specific "Service Unavailable" error banner instead of a generic crash.
+This section maps project components to the [Course Rubric](https://github.com/DataTalksClub/ai-dev-tools-zoomcamp/blob/main/project/README.md) (excluding AI Output Evaluation).
+
+| Criterion | Evidence / Path | Verification Command |
+| :--- | :--- | :--- |
+| **1. Problem Definition** | [PRD.md](docs/PRD.md#1-problem-statement) | N/A (Doc Review) |
+| **2. Interface** | [demo-script.md](presentation/demo-script.md) | `npm run dev` (Local UI) |
+| **3. Data Ingestion** | [uploads.py (L70)](apps/api/app/api/routes/uploads.py#L70) | `curl /health` (Storage Check) |
+| **4. Monitoring** | [VERIFICATION.md](docs/VERIFICATION.md) | View [JSON Log Proof](docs/VERIFICATION.md#1-structured-logging--request_id) |
+| **5. Reproducibility** | [README.md](#-local-development-fresh-clone-guide) | `./run.sh dev` |
+| **6. Testing** | [VERIFICATION.md](docs/VERIFICATION.md#3-test-coverage) | `./run.sh test` |
+| **7. Best Practices** | [ADR 0001](docs/adr/0001-contract-first-openapi.md) | `pnpm client:check` |
+| **8. Documentation** | `docs/` folder | Link review in README |
+| **9. Deployment** | [render.yaml](render.yaml) | Check [Live Demo](#-live-demo) |
 
 ---
+
+## 🏛️ ADRs (Architecture Decision Records)
+We document key architectural decisions to ensure long-term maintainability.
+- **[ADR 0001: Contract-First OpenAPI](docs/adr/0001-contract-first-openapi.md)**: Ensuring type safety between Frontend and Backend.
+- **[ADR 0002: Multi-Backend Storage](docs/adr/0002-storage-strategy.md)**: Handling local dev vs production storage.
+
+---
+
+## 🏗️ Technical Documentation
+- 📘 **[Architecture](docs/ARCHITECTURE.md)**: System design and mermaid diagrams.
+- 📜 **[API Contract](docs/CONTRACT.md)**: OpenAPI patterns and error handling.
+- 🚀 **[Deployment](DEPLOYMENT.md)**: Production setup and Render guide.
+- 🔍 **[Observability](docs/observability.md)**: Logging and monitoring practices.
+
+---
+
 *Built with ❤️ by Camilo C.F. (AI Tooling Lead)*

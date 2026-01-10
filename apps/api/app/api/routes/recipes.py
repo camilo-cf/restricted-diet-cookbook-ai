@@ -1,13 +1,14 @@
 from typing import Any, List, Optional
 from uuid import UUID
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_
 from sqlalchemy.orm import selectinload
 from pydantic import BaseModel
 
-from app.api.deps_auth import get_db, get_current_user
+from app.api.deps import get_db
+from app.api.deps_auth import get_current_user
 from app.db.models.recipe import Recipe
 from app.db.models.user import User
 from app.core.config import settings
@@ -236,4 +237,4 @@ async def delete_recipe(
     
     await db.delete(recipe)
     await db.commit()
-    return {"ok": True}
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

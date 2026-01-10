@@ -1,5 +1,7 @@
+import os
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, UUID4
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -9,6 +11,7 @@ from app.api.deps_auth import get_current_user
 from app.db.models.user import User
 from app.db.models.upload import Upload
 from app.services.storage_service import storage_service
+from app.core.config import settings
 
 router = APIRouter()
 
@@ -41,7 +44,6 @@ async def create_presigned_url(
     ext = payload.filename.split(".")[-1] if "." in payload.filename else "bin"
     object_key = f"{current_user.id}/{uuid.uuid4()}.{ext}"
 
-    # Verify storage service is reachable/healthy implicitly via the call or trust it
     url = storage_service.generate_presigned_url(object_key, payload.contentType)
 
     # Track intent
@@ -55,12 +57,41 @@ async def create_presigned_url(
     await db.commit()
     await db.refresh(upload_record)
 
-    # Calculate permanent GET URL for preview
-    from app.core.config import settings
-    base_url = settings.PUBLIC_AWS_ENDPOINT_URL or settings.AWS_ENDPOINT_URL
-    image_url = f"{base_url}/{settings.AWS_BUCKET_NAME}/{object_key}"
+    # Calculate image URL for preview
+    if settings.STORAGE_BACKEND == "disk":
+        public_api_url = os.getenv("NEXT_PUBLIC_API_URL", "http://localhost:8000")
+        image_url = f"{public_api_url}/uploads/content/{object_key}"
+    else:
+        base_url = settings.PUBLIC_AWS_ENDPOINT_URL or settings.AWS_ENDPOINT_URL
+        image_url = f"{base_url}/{settings.AWS_BUCKET_NAME}/{object_key}"
 
     return {"uploadId": upload_record.id, "uploadUrl": url, "imageUrl": image_url}
+
+@router.put("/direct-upload/{object_key:path}")
+async def direct_upload(object_key: str, request: Request):
+    """Fallback for when STORAGE_BACKEND=disk. Handles the PUT request from browser."""
+    if settings.STORAGE_BACKEND != "disk":
+        raise HTTPException(status_code=400, detail="Disk storage not enabled")
+    
+    file_path = os.path.join(settings.UPLOAD_DIR, object_key)
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    
+    with open(file_path, "wb") as f:
+        f.write(await request.body())
+    
+    return Response(status_code=200)
+
+@router.get("/content/{object_key:path}")
+async def get_content(object_key: str):
+    """Serve uploaded content when using local disk storage."""
+    if settings.STORAGE_BACKEND != "disk":
+        raise HTTPException(status_code=404, detail="Not using disk storage")
+    
+    file_path = os.path.join(settings.UPLOAD_DIR, object_key)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    return FileResponse(file_path)
 
 @router.post("/complete")
 async def complete_upload(
@@ -68,7 +99,6 @@ async def complete_upload(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    # 1. Get record
     result = await db.execute(select(Upload).where(Upload.id == payload.uploadId, Upload.user_id == current_user.id))
     upload = result.scalars().first()
     
@@ -76,9 +106,8 @@ async def complete_upload(
         raise HTTPException(status_code=404, detail="Upload not found")
         
     if upload.is_completed:
-        return # Idempotent ok
+        return Response(status_code=204)
 
-    # 2. Verify in Storage
     try:
         storage_service.verify_upload(upload.object_key)
     except ValueError as e:
@@ -86,11 +115,7 @@ async def complete_upload(
     except Exception:
         raise HTTPException(status_code=500, detail="Storage verification failed")
 
-    # 3. Mark complete
     upload.is_completed = True
     await db.commit()
     
-    return Response(status_code=204) # No content from spec (wait, openapi spec says 204 or json?)
-    # Spec says 204.
-    # FastAPI returning Response(status_code=204) is safest.
-from fastapi import Response
+    return Response(status_code=204)

@@ -18,11 +18,13 @@ class Settings(BaseSettings):
     CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000", "http://127.0.0.1:3001"]
     
     # Storage
-    AWS_ACCESS_KEY_ID: str
-    AWS_SECRET_ACCESS_KEY: str
+    STORAGE_BACKEND: str = "minio" # minio | disk
+    UPLOAD_DIR: str = "uploads"
+    AWS_ACCESS_KEY_ID: str = ""
+    AWS_SECRET_ACCESS_KEY: str = ""
     AWS_REGION: str = "us-east-1"
-    AWS_BUCKET_NAME: str
-    AWS_ENDPOINT_URL: str
+    AWS_BUCKET_NAME: str = "uploads"
+    AWS_ENDPOINT_URL: str = ""
     PUBLIC_AWS_ENDPOINT_URL: str = "" # Defaults to AWS_ENDPOINT_URL if not set
     # AI
     OPENAI_API_KEY: str

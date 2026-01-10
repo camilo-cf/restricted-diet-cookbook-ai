@@ -41,12 +41,12 @@ async def test_ai_service_unit():
 
 @pytest.mark.asyncio
 async def test_storage_service_unit():
-    from app.services.storage_service import StorageService
-    # StorageService init takes no args
+    from app.services.storage_service import S3StorageService
+    # S3StorageService init takes no args
     with patch("app.services.storage_service.boto3.client") as mock_boto:
         mock_s3 = MagicMock()
         mock_boto.return_value = mock_s3
-        service = StorageService()
+        service = S3StorageService()
         
         # Test presigned URL
         service.presign_client.generate_presigned_url = MagicMock(return_value="http://fake")
