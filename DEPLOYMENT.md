@@ -54,7 +54,10 @@ Our services (Storage, AI) use **Lazy Initialization**. They do not block applic
    - `SECRET_KEY`: Use a cryptographically secure 32+ character string.
    - `OPENAI_API_KEY`: Rotate periodically and use Environment Secrets (e.g., Render Secrets, AWS Secrets Manager).
 3. **CORS Settings**: Restrict `CORS_ORIGINS` strictly to your production frontend domains.
-4. **S3 Permissions**:
+4. **Cookie Security (Cross-Domain)**:
+   - When frontend and backend are on different subdomains (common on Render), set `SESSION_COOKIE_SAMESITE=none` and `SESSION_COOKIE_SECURE=true` in the backend.
+   - Note: Modern browsers require `Secure=true` if `SameSite=None` is used.
+5. **S3 Permissions**:
    - The primary `AWS_ACCESS_KEY_ID` should have restricted permissions to ONLY the application bucket.
    - Use **CORS configuration** on the bucket to only allow `PUT` from your domain.
 

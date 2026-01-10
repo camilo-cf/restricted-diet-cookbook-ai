@@ -14,7 +14,7 @@ Navigating a restricted diet (allergies, intolerances, or specific lifestyles li
 3.  **Tailored Gourmet Generation**: Leveraging OpenAI GPT-4o with structured output to produce high-quality, chef-grade recipes in seconds.
 4.  **The Showcase Loop**: Document your success by uploading photos of your final cooked dishes, building a personalized gallery of safe culinary wins.
 
-**Live Demo**: [Place URL Here] (Managed by maintainer)
+**Live Demo**: [https://cookbook-frontend-k5lz.onrender.com](https://cookbook-frontend-k5lz.onrender.com) (Deployed on Render)
 
 ---
 
@@ -171,6 +171,7 @@ This section maps project components to the [Course Rubric](https://github.com/D
 We document key architectural decisions to ensure long-term maintainability.
 - **[ADR 0001: Contract-First OpenAPI](docs/adr/0001-contract-first-openapi.md)**: Ensuring type safety between Frontend and Backend.
 - **[ADR 0002: Multi-Backend Storage](docs/adr/0002-storage-strategy.md)**: Handling local dev vs production storage.
+- **[ADR 0003: Client-Side Auth Guards](docs/adr/0003-client-side-auth-guards.md)**: Stabilizing authentication on cross-domain subdomains.
 
 ---
 
