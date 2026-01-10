@@ -176,14 +176,19 @@ async def update_user_me(
     if user_in.dietaryPreferences is not None:
         current_user.dietary_preferences = json.dumps(user_in.dietaryPreferences)
     
-    # 2. Update Image
-    if user_in.profileImageId is not None:
-        from app.db.models.upload import Upload
-        result = await db.execute(select(Upload).where(Upload.id == user_in.profileImageId, Upload.user_id == current_user.id))
-        upload = result.scalars().first()
-        if not upload:
-            raise HTTPException(status_code=404, detail="Profile image upload not found")
-        current_user.profile_image_id = upload.id
+    # 2. Update Image (including deletion)
+    if "profileImageId" in user_in.model_dump(exclude_unset=True):
+        if user_in.profileImageId is None:
+            # Explicitly delete the profile picture
+            current_user.profile_image_id = None
+        else:
+            # Set a new profile picture
+            from app.db.models.upload import Upload
+            result = await db.execute(select(Upload).where(Upload.id == user_in.profileImageId, Upload.user_id == current_user.id))
+            upload = result.scalars().first()
+            if not upload:
+                raise HTTPException(status_code=404, detail="Profile image upload not found")
+            current_user.profile_image_id = upload.id
     
     db.add(current_user)
     await db.commit()

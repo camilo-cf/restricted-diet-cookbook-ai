@@ -150,6 +150,26 @@ export default function ProfilePage() {
       }
   };
 
+  const handleDeleteImage = async () => {
+      if (!window.confirm("Are you sure you want to delete your profile picture?")) return;
+      
+      setUploading(true);
+      try {
+          const { data: updatedUser, error } = await api.PATCH("/auth/me", {
+              body: { profileImageId: null as any }
+          });
+          if (error) throw error;
+          
+          setUser(updatedUser);
+          toast("Profile picture removed successfully!", "success");
+      } catch (err) {
+          console.error(err);
+          toast("Failed to delete profile picture.", "error");
+      } finally {
+          setUploading(false);
+      }
+  };
+
   const handleLogout = async () => {
       await api.POST("/auth/logout");
       toast("Logged out successfully.", "info");
@@ -204,6 +224,20 @@ export default function ProfilePage() {
                                 <Camera size={18} />
                                 <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={uploading} />
                             </label>
+                            {user.profileImageUrl && (
+                                <button 
+                                    onClick={handleDeleteImage}
+                                    disabled={uploading}
+                                    className="absolute bottom-6 left-0 h-10 w-10 bg-red-500 text-white rounded-xl flex items-center justify-center shadow-lg hover:bg-red-600 transition-all hover:scale-110 border-2 border-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title="Delete profile picture"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M3 6h18"></path>
+                                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                                    </svg>
+                                </button>
+                            )}
                         </div>
                         <h3 className="text-xl font-bold text-emerald-950">{user.full_name}</h3>
                         <p className="text-sm text-slate-500">{user.email}</p>
