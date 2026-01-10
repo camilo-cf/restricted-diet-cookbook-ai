@@ -53,6 +53,10 @@ async def generate_recipe_route(
             image_bytes=image_bytes
         )
     except Exception as e:
+        import traceback
+        print(f"CRITICAL AI ERROR: {str(e)}")
+        traceback.print_exc()
+        
         error_msg = str(e)
         if "limit exceeded" in error_msg:
             raise HTTPException(status_code=429, detail="Daily AI limit reached")
