@@ -66,4 +66,4 @@ ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
 # The root server.js is the entry point in standalone mode for monorepos
-CMD ["node", "server.js"]
+CMD ["node", "apps/web/server.js"]
