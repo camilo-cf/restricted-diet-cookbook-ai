@@ -80,6 +80,26 @@ export interface paths {
         };
       };
     };
+    /**
+     * Delete Current User Account
+     * @description Permanently deletes the current user account and clears session.
+     */
+    delete: {
+      responses: {
+        /** @description Account deleted successfully */
+        204: {
+          content: never;
+        };
+        /** @description Not logged in */
+        401: {
+          content: never;
+        };
+        /** @description Cannot delete demo account */
+        403: {
+          content: never;
+        };
+      };
+    };
     /** Update Current User Profile */
     patch: {
       requestBody?: {

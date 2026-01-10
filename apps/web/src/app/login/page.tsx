@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Leaf } from "lucide-react";
+import Link from "next/link";
 
 const schema = z.object({
   email: z.string().email("Invalid email address"),
@@ -119,7 +120,7 @@ export default function LoginPage() {
           </CardContent>
           <CardFooter className="flex justify-center border-t bg-muted/50 p-4">
             <p className="text-xs text-muted-foreground">
-                Don&apos;t have an account? <span className="text-primary cursor-pointer hover:underline">Sign up</span>
+                Don&apos;t have an account? <Link href="/register" className="text-primary font-semibold hover:underline">Sign up</Link>
             </p>
           </CardFooter>
         </Card>

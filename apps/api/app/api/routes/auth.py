@@ -197,3 +197,23 @@ async def update_user_me(
     result = await db.execute(select(User).options(selectinload(User.profile_image)).where(User.id == current_user.id))
     user = result.scalars().first()
     return to_user_response(user)
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user_me(
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Permanently delete the current user's account.
+    """
+    # Verify not demo user (optional, but good practice for this specific app)
+    if current_user.email == "demo@example.com":
+        raise HTTPException(status_code=403, detail="Cannot delete demo account")
+
+    await db.delete(current_user)
+    await db.commit()
+    
+    # Clear session cookie
+    response.delete_cookie(key=settings.SESSION_COOKIE_NAME)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

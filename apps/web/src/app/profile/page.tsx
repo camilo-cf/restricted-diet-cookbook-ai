@@ -325,6 +325,36 @@ export default function ProfilePage() {
                         </form>
                     </CardContent>
                 </Card>
+
+                <Card className="glass shadow-xl shadow-red-900/5 border-white/40 p-1">
+                    <CardHeader className="pb-4">
+                        <CardTitle className="font-brand text-red-700">Danger Zone</CardTitle>
+                        <CardDescription>Irreversible actions requiring caution.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                         <div className="flex items-center justify-between p-4 border border-red-100 rounded-xl bg-red-50/50">
+                             <div>
+                                 <h4 className="font-bold text-red-900">Delete Account</h4>
+                                 <p className="text-sm text-red-700/80">Permanently remove your account and all data.</p>
+                             </div>
+                             <Button 
+                                variant="destructive"
+                                onClick={async () => {
+                                    if (confirm("Are you ABSOLUTELY sure? This cannot be undone.")) {
+                                        try {
+                                             await api.DELETE("/auth/me");
+                                             window.location.href = "/";
+                                        } catch (e) {
+                                            toast("Failed to delete account", "error");
+                                        }
+                                    }
+                                }}
+                             >
+                                Delete Account
+                             </Button>
+                         </div>
+                    </CardContent>
+                </Card>
             </div>
         </div>
       </div>

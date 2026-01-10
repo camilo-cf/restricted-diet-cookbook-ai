@@ -382,6 +382,17 @@ paths:
         '401':
           description: Not logged in
 
+    delete:
+      summary: Delete Current User Account
+      description: Permanently deletes the current user account and clears session.
+      responses:
+        '204':
+          description: Account deleted successfully
+        '401':
+          description: Not logged in
+        '403':
+          description: Cannot delete demo account
+
   /auth/csrf:
     get:
       summary: Get CSRF Token
