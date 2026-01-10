@@ -21,6 +21,26 @@ async def lifespan(app: FastAPI):
     from app.services.storage_service import storage_service
     storage_service.initialize()
     
+    # Create Demo User if not exists
+    from sqlalchemy import select
+    from app.db.models.user import User
+    from app.core.security import get_password_hash
+    from app.db.session import AsyncSessionLocal
+    
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(select(User).where(User.email == "demo@example.com"))
+        if not result.scalars().first():
+            demo_user = User(
+                email="demo@example.com",
+                hashed_password=get_password_hash("password"),
+                full_name="Demo User",
+                role="maintainer",
+                is_active=True
+            )
+            db.add(demo_user)
+            await db.commit()
+            print("Successfully created seed demo user")
+    
     yield
 
 app = FastAPI(
