@@ -213,23 +213,26 @@ async def delete_user_me(
 
     try:
         from app.db.models.upload import Upload
-        from sqlalchemy import delete
+        from app.db.models.recipe import Recipe
+        from sqlalchemy import delete, select
         
-        # 1. Break circular dependency if any (User.profile_image_id -> Upload.id)
+        # 1. Break circular dependency (User.profile_image_id -> Upload.id)
         current_user.profile_image_id = None
         db.add(current_user)
-        await db.commit() # Commit to release the FK constraint
+        # We also need to flush this change before attempting to delete uploads that might be referenced
+        await db.commit() 
         
-        # 2. Delete all uploads by this user
-        # Note: In a real app, you should also delete files from storage here
+        # 2. Delete ALL Recipes first (since they might point to Uploads or User)
+        await db.execute(delete(Recipe).where(Recipe.user_id == current_user.id))
+        
+        # 3. Delete ALL Uploads (Profile pics, recipe images, etc)
         await db.execute(delete(Upload).where(Upload.user_id == current_user.id))
         
-        # 3. Delete the user
+        # 4. Delete the user
         await db.delete(current_user)
         await db.commit()
         
-        # 4. Verify deletion
-        from sqlalchemy import select
+        # 5. Verify deletion
         verify = await db.execute(select(User).where(User.id == current_user.id))
         if verify.scalars().first():
             print("CRITICAL: User was NOT deleted despite commit")
