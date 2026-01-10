@@ -33,6 +33,7 @@ app = FastAPI(
 app.add_middleware(RequestIDMiddleware)
 
 if settings.CORS_ORIGINS:
+    print(f"DEBUG: Loading CORS_ORIGINS: {settings.CORS_ORIGINS}")
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[str(origin) for origin in settings.CORS_ORIGINS],
