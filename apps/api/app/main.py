@@ -77,6 +77,9 @@ app.include_router(uploads.router, prefix="/uploads", tags=["uploads"])
 app.include_router(ai.router, prefix="/ai", tags=["ai"])
 app.include_router(recipes.router, prefix="/recipes", tags=["recipes"])
 
+from app.api.routes import migration
+app.include_router(migration.router, prefix="/admin", tags=["admin"])
+
 @app.get("/")
 def root():
     return {"message": "Welcome to Restricted Diet Cookbook AI API"}
