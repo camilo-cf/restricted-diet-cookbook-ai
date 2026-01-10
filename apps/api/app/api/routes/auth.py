@@ -225,13 +225,40 @@ async def delete_user_me(
         await db.execute(delete(Upload).where(Upload.user_id == current_user.id))
         
         # 3. Delete the user
-        # Recipes will be deleted automatically due to cascade="all, delete-orphan" on User.recipes
         await db.delete(current_user)
         await db.commit()
+        
+        # 4. Verify deletion
+        from sqlalchemy import select
+        verify = await db.execute(select(User).where(User.id == current_user.id))
+        if verify.scalars().first():
+            print("CRITICAL: User was NOT deleted despite commit")
+            raise HTTPException(status_code=500, detail="Database verify failed")
+            
+        print(f"User {current_user.id} deleted successfully")
+
     except Exception as e:
         print(f"Error deleting user: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to delete account data")
+        # Rollback in case of partial failure
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to delete account data: {str(e)}")
     
-    # Clear session cookie
-    response.delete_cookie(key=settings.SESSION_COOKIE_NAME)
+    # Clear session cookie - being explicit about domain/path/secure to ensure browser accepts it
+    response.delete_cookie(
+        key=settings.SESSION_COOKIE_NAME,
+        httponly=True,
+        samesite="none",
+        secure=True
+    )
+    # Double tap: set it to empty string with immediate expiration
+    response.set_cookie(
+        key=settings.SESSION_COOKIE_NAME,
+        value="",
+        httponly=True,
+        max_age=0,
+        expires=0,
+        samesite="none",
+        secure=True
+    )
+    
     return Response(status_code=status.HTTP_204_NO_CONTENT)
