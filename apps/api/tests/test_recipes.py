@@ -49,7 +49,9 @@ async def test_recipe_rbac(client: AsyncClient, db: AsyncSession):
     # Setup: Create a recipe owned by user1
     user1 = {"username": "rbac_owner@example.com", "password": "password123"}
     await client.post("/auth/register", json=user1)
-    await client.post("/auth/login", json=user1)
+    login_res = await client.post("/auth/login", json=user1)
+    if sid := login_res.cookies.get("session_id"):
+        client.cookies.set("session_id", sid)
     
     recipe_data = {
         "title": "RBAC Test Recipe",
@@ -67,6 +69,7 @@ async def test_recipe_rbac(client: AsyncClient, db: AsyncSession):
 
     # 2. Logout and Anonymous cannot update
     await client.post("/auth/logout")
+    client.cookies.delete("session_id")
     patch_anon = await client.patch(f"/recipes/{recipe_id}", json=update_data)
     assert patch_anon.status_code == 401
 
@@ -76,6 +79,8 @@ async def test_recipe_rbac(client: AsyncClient, db: AsyncSession):
     await client.post("/auth/register", json=user2)
     reg_other = await client.post("/auth/login", json=user2)
     assert reg_other.status_code == 200
+    if sid := reg_other.cookies.get("session_id"):
+        client.cookies.set("session_id", sid)
     
     patch_other = await client.patch(f"/recipes/{recipe_id}", json=update_data)
     assert patch_other.status_code == 403
@@ -92,7 +97,9 @@ async def test_recipe_rbac(client: AsyncClient, db: AsyncSession):
     await db.commit()
     
     # Login as maintainer
-    await client.post("/auth/login", json={"username": user3_email, "password": "password123"})
+    maint_login = await client.post("/auth/login", json={"username": user3_email, "password": "password123"})
+    if sid := maint_login.cookies.get("session_id"):
+        client.cookies.set("session_id", sid)
     
     # Re-create a recipe to delete
     recipe_res = await client.post("/recipes", json=recipe_data)
@@ -111,13 +118,18 @@ async def test_recipe_deletion_rbac_forbidden(client: AsyncClient, db: AsyncSess
     await client.post("/auth/register", json={"username": u2_email, "password": "password123"})
     
     # Login as User 1 to create recipe
-    await client.post("/auth/login", json={"username": u1_email, "password": "password123"})
+    u1_login = await client.post("/auth/login", json={"username": u1_email, "password": "password123"})
+    if sid := u1_login.cookies.get("session_id"):
+        client.cookies.set("session_id", sid)
     res = await client.post("/recipes", json={"title": "My Secret Recipe", "ingredients": ["apple"], "instruction_text": "eat it", "dietary_tags": []})
     recipe_id = res.json()["id"]
     await client.post("/auth/logout")
+    client.cookies.delete("session_id")
     
     # Login as User 2 and try to delete User 1's recipe
-    await client.post("/auth/login", json={"username": u2_email, "password": "password123"})
+    u2_login = await client.post("/auth/login", json={"username": u2_email, "password": "password123"})
+    if sid := u2_login.cookies.get("session_id"):
+        client.cookies.set("session_id", sid)
     res_del = await client.delete(f"/recipes/{recipe_id}")
     assert res_del.status_code == 403 # Forbidden
     
@@ -134,5 +146,6 @@ async def test_recipe_validation(client_with_auth: AsyncClient):
     
     # Test unauthorized create
     await client_with_auth.post("/auth/logout")
+    client_with_auth.cookies.delete("session_id")
     res_anon = await client_with_auth.post("/recipes", json={"title": "test", "ingredients": [], "instruction_text": "test", "dietary_tags": []})
     assert res_anon.status_code == 401

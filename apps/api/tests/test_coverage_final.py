@@ -55,7 +55,10 @@ async def test_real_get_db(db: AsyncSession):
 async def test_recipe_roles_more(client: AsyncClient, db: AsyncSession):
     email1 = f"u1_{uuid.uuid4().hex[:4]}@example.com"
     await client.post("/auth/register", json={"username": email1, "password": "p"})
-    await client.post("/auth/login", json={"username": email1, "password": "p"})
+    login_res = await client.post("/auth/login", json={"username": email1, "password": "p"})
+    # Extract and set the session cookie
+    if session_id := login_res.cookies.get("session_id"):
+        client.cookies.set("session_id", session_id)
     res = await client.post("/recipes", json={"title": "T", "ingredients": [], "instruction_text": "I", "dietary_tags": []})
     rid = res.json()["id"]
     

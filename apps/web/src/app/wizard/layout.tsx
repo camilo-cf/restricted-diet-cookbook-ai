@@ -1,9 +1,11 @@
 "use client";
 
 import { WizardProvider } from "@/context/wizard-context";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { clsx } from "clsx";
-import { Check, ChefHat, Camera, Sparkles } from "lucide-react";
+import { Check, ChefHat, Camera, Sparkles, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
 
 const STEPS = [
   { label: "Ingredients", href: "/wizard/ingredients", icon: ChefHat },
@@ -53,11 +55,39 @@ function WizardProgress() {
   );
 }
 
+
 export default function WizardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { error } = await api.GET("/auth/me");
+        if (error) {
+          router.push("/login?from=/wizard");
+          return;
+        }
+        setCheckingAuth(false);
+      } catch (err) {
+        router.push("/login?from=/wizard");
+      }
+    };
+    checkAuth();
+  }, [router]);
+
+  if (checkingAuth) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-12 w-12 text-emerald-600 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <WizardProvider>
       <div className="min-h-screen bg-gray-50/50 py-12 px-4 sm:px-6 lg:px-8">

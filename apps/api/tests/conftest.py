@@ -67,8 +67,12 @@ async def client_with_auth(client: AsyncClient):
         "username": email,
         "password": "testpassword"
     })
-    await client.post("/auth/login", json={
+    login_response = await client.post("/auth/login", json={
         "username": email,
         "password": "testpassword"
     })
+    # Extract session_id cookie and add it to the client
+    session_id = login_response.cookies.get("session_id")
+    if session_id:
+        client.cookies.set("session_id", session_id)
     return client
