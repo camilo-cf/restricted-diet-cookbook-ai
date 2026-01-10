@@ -101,10 +101,16 @@ async def login(
     db: AsyncSession = Depends(get_db)
 ):
     # 1. Find user
+    print(f"DEBUG: Login attempt for {credentials.username}")
     result = await db.execute(select(User).options(selectinload(User.profile_image)).where(User.email == credentials.username))
     user = result.scalars().first()
     
-    if not user or not verify_password(credentials.password, user.hashed_password):
+    if not user:
+        print(f"DEBUG: User not found: {credentials.username}")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+        
+    if not verify_password(credentials.password, user.hashed_password):
+        print(f"DEBUG: Password mismatch for {credentials.username}")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     
     if not user.is_active:
@@ -117,15 +123,18 @@ async def login(
     )
     
     # 3. Set Cookie
+    # Note: For cross-site frontend/backend on Render subdomains, 
+    # we MUST use samesite="none" and secure=True.
     response.set_cookie(
         key="session_id",
         value=token,
         httponly=True,
-        samesite="lax",
-        secure=False,
+        samesite="none",
+        secure=True,
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
     )
     
+    print(f"DEBUG: Login successful for {user.email}")
     return to_user_response(user)
 
 @router.post("/logout")
