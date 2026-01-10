@@ -127,6 +127,7 @@ export default function UploadPage() {
       >
         <input
           id="file-upload"
+          data-testid="file-upload"
           type="file"
           className="hidden"
           accept="image/*"

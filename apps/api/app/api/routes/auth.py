@@ -12,6 +12,7 @@ from app.core.security import create_session_token, verify_password, get_passwor
 from app.core.config import settings
 from app.db.models.user import User
 from pydantic import BaseModel, EmailStr, UUID4
+from app.middleware.security import rate_limit_auth
 
 router = APIRouter()
 
@@ -67,7 +68,7 @@ def to_user_response(user: User) -> UserResponse:
     )
 
 # --- Endpoints ---
-@router.post("/register", response_model=UserResponse, status_code=201)
+@router.post("/register", response_model=UserResponse, status_code=201, dependencies=[Depends(rate_limit_auth)])
 async def register(
     credentials: LoginRequest,
     db: AsyncSession = Depends(get_db)
@@ -94,7 +95,7 @@ async def register(
     
     return to_user_response(new_user)
 
-@router.post("/login", response_model=UserResponse)
+@router.post("/login", response_model=UserResponse, dependencies=[Depends(rate_limit_auth)])
 async def login(
     response: Response,
     credentials: LoginRequest,

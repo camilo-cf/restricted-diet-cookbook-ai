@@ -9,8 +9,9 @@ from app.services.storage_service import storage_service
 from app.api.deps import get_db
 from app.api.deps_auth import get_current_user
 from app.db.models.user import User
-from app.db.models.upload import Upload
 from app.db.models.recipe import Recipe
+from app.db.models.upload import Upload
+from app.middleware.security import rate_limit_ai
 
 router = APIRouter()
 
@@ -20,7 +21,7 @@ class RecipeGenerationRequest(BaseModel):
     uploadId: Optional[UUID4] = None
     user_notes: Optional[str] = None
 
-@router.post("/recipe", summary="Generate Recipe")
+@router.post("/recipe", summary="Generate Recipe", dependencies=[Depends(rate_limit_ai)])
 async def generate_recipe_route(
     payload: RecipeGenerationRequest,
     current_user: User = Depends(get_current_user),
@@ -81,7 +82,7 @@ class IngredientValidationRequest(BaseModel):
     ingredients: List[str]
     restrictions: List[str]
 
-@router.post("/validate", summary="Validate Ingredients")
+@router.post("/validate", summary="Validate Ingredients", dependencies=[Depends(rate_limit_ai)])
 async def validate_ingredients_route(
     payload: IngredientValidationRequest,
     current_user: User = Depends(get_current_user)

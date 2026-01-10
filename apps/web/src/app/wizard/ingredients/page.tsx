@@ -25,7 +25,7 @@ interface ValidationIssue {
     suggestion: string;
 }
 
-const COMMON_RESTRICTIONS = ["Gluten-free", "Keto", "Vegan", "Dairy-free", "Nut-free"];
+const COMMON_RESTRICTIONS = ["Gluten-free", "Keto", "Vegan", "Dairy-free", "Nut-free", "Sugar-free"];
 
 export default function IngredientsPage() {
   const router = useRouter();

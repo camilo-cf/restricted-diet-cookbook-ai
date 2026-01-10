@@ -70,7 +70,7 @@ export function Navbar() {
                         <Link href="/profile" className="flex items-center gap-2 hover:bg-emerald-50 p-1.5 rounded-2xl transition-all group">
                             <div className="h-8 w-8 rounded-xl overflow-hidden bg-emerald-100 text-emerald-700 flex items-center justify-center border border-white shadow-sm">
                                 {user.profileImageUrl ? (
-                                    <img src={user.profileImageUrl} alt="" className="w-full h-full object-cover" />
+                                    <img src={user.profileImageUrl} alt={`Avatar for ${user.full_name}`} className="w-full h-full object-cover" />
                                 ) : (
                                     <span className="font-bold text-xs">{user.full_name[0]}</span>
                                 )}
@@ -111,6 +111,7 @@ export function Navbar() {
           <div className="flex items-center sm:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
+              aria-label="Menu"
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
             >
               {isOpen ? <X size={24} /> : <Menu size={24} />}
@@ -154,7 +155,7 @@ export function Navbar() {
                     >
                         <div className="h-9 w-9 rounded-lg overflow-hidden bg-emerald-100 text-emerald-700 flex items-center justify-center border border-white shadow-sm">
                             {user.profileImageUrl ? (
-                                <img src={user.profileImageUrl} alt="" className="w-full h-full object-cover" />
+                                <img src={user.profileImageUrl} alt={`Avatar for ${user.full_name}`} className="w-full h-full object-cover" />
                             ) : (
                                 <span className="font-bold text-sm">{user.full_name[0]}</span>
                             )}

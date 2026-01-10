@@ -188,7 +188,7 @@ export default function ProfilePage() {
                         <div className="relative inline-block group">
                             <div className="h-32 w-32 rounded-3xl overflow-hidden border-4 border-white shadow-xl bg-slate-100 mb-4 transition-transform group-hover:scale-[1.02]">
                                 {user.profileImageUrl ? (
-                                    <img src={user.profileImageUrl} alt={user.full_name} className="w-full h-full object-cover" />
+                                    <img src={user.profileImageUrl} alt={`Profile picture for ${user.full_name}`} className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center text-emerald-600 bg-emerald-50">
                                         <User size={64} />
@@ -229,8 +229,8 @@ export default function ProfilePage() {
                         <form onSubmit={handleSubmit(onUpdateProfile)} className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-slate-700">Display Name</label>
-                                    <Input {...register("fullName")} className="bg-white/50 border-white/60 focus:bg-white" />
+                                    <label className="text-sm font-semibold text-slate-700" htmlFor="fullName">Display Name</label>
+                                    <Input id="fullName" {...register("fullName")} className="bg-white/50 border-white/60 focus:bg-white" />
                                     {errors.fullName && <p className="text-xs text-red-500 mt-1">{errors.fullName.message}</p>}
                                 </div>
                                 <div className="space-y-2">
@@ -240,8 +240,9 @@ export default function ProfilePage() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">Bio</label>
+                                <label className="text-sm font-semibold text-slate-700" htmlFor="bio">Bio</label>
                                 <Textarea 
+                                    id="bio"
                                     {...register("bio")} 
                                     className="bg-white/50 border-white/60 focus:bg-white h-24 resize-none"
                                     placeholder="Tell us about your culinary journey..."

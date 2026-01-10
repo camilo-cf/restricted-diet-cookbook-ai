@@ -56,7 +56,7 @@ async def override_dependencies(db):
 
 @pytest_asyncio.fixture(scope="function")
 async def client():
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://localhost") as c:
         yield c
 
 @pytest_asyncio.fixture(scope="function")

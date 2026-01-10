@@ -35,6 +35,7 @@ const renderWithContext = () => {
 describe("IngredientsPage Validation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
   });
 
   it("renders correctly", () => {
@@ -87,5 +88,32 @@ describe("IngredientsPage Validation", () => {
     fireEvent.click(screen.getByText(/Apply all suggestions/i));
     
     expect(mockPush).toHaveBeenCalledWith("/wizard/upload");
+  });
+
+  it("adds restrictions via badges", async () => {
+      renderWithContext();
+      
+      const badge = screen.getByText(/Gluten-free/i);
+      fireEvent.click(badge);
+      
+      const restrictionsInput = screen.getByPlaceholderText(/e.g. Gluten-free/i);
+      expect((restrictionsInput as HTMLInputElement).value).toBe("Gluten-free");
+      
+      // Add another one
+      const veganBadge = screen.getByText(/Vegan/i);
+      fireEvent.click(veganBadge);
+      expect((restrictionsInput as HTMLInputElement).value).toBe("Gluten-free, Vegan");
+  });
+
+  it("shows validation error for empty ingredients", async () => {
+      renderWithContext();
+      
+      const nextButton = screen.getByText(/Next Step/i);
+      fireEvent.click(nextButton);
+      
+      // The schema min(10) error is "Please list at least a few ingredients"
+      await waitFor(() => {
+           expect(screen.getByText(/Please list at least a few ingredients/i)).toBeInTheDocument();
+      });
   });
 });

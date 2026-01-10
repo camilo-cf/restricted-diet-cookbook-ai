@@ -166,7 +166,10 @@ async def update_recipe(
     if "uploadId" in recipe_in:
         # Verify upload belongs to user
         from app.db.models.upload import Upload
+        from uuid import UUID as PyUUID
         u_id = recipe_in["uploadId"]
+        if isinstance(u_id, str):
+            u_id = PyUUID(u_id)
         result = await db.execute(select(Upload).where(Upload.id == u_id, Upload.user_id == current_user.id))
         upload_record = result.scalars().first()
         if not upload_record:

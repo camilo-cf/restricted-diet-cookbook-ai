@@ -11,6 +11,15 @@ export const metadata: Metadata = {
   description: "Generate personalized recipes for restricted diets.",
 };
 
+const CSP = `
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval';
+  style-src 'self' 'unsafe-inline';
+  img-src 'self' data: https: blob:;
+  font-src 'self' data:;
+  connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'} https:;
+`.replace(/\n/g, "");
+
 import { Navbar } from "@/components/navbar";
 
 import { ToastProvider } from "@/components/ui/Toast";
@@ -23,6 +32,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta httpEquiv="Content-Security-Policy" content={CSP} />
+      </head>
       <body className={`${inter.variable} ${outfit.variable} font-sans`}>
         <ToastProvider>
           <WizardProvider>

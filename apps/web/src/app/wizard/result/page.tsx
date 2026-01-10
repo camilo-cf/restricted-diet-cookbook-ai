@@ -207,7 +207,7 @@ export default function ResultPage() {
                         </div>
                         <span className="font-bold text-emerald-900">Show us your masterpiece!</span>
                         <span className="text-sm text-emerald-600/70">Upload a photo of your cooked dish</span>
-                        <input type="file" className="hidden" accept="image/*" onChange={handleResultPhoto} disabled={isUploading} />
+                        <input data-testid="dish-upload" type="file" className="hidden" accept="image/*" onChange={handleResultPhoto} disabled={isUploading} />
                     </label>
                 </div>
             )}

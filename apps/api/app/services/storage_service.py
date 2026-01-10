@@ -71,7 +71,12 @@ class S3StorageService(StorageServiceBase):
                 import json
                 policy = {
                     "Version": "2012-10-17",
-                    "Statement": [{"Effect": "Allow", "Principal": "*", "Action": ["s3:GetObject"], "Resource": [f"arn:aws:s3:::{self.bucket}/*"]}]
+                    "Statement": [{
+                        "Effect": "Allow", 
+                        "Principal": "*", 
+                        "Action": ["s3:GetObject"], 
+                        "Resource": [f"arn:aws:s3:::{self.bucket}/recipes/*"]
+                    }]
                 }
                 self.s3_client.put_bucket_policy(Bucket=self.bucket, Policy=json.dumps(policy))
             else:
@@ -90,6 +95,10 @@ class S3StorageService(StorageServiceBase):
         self.s3_client.put_bucket_cors(Bucket=self.bucket, CORSConfiguration=cors_configuration)
 
     def generate_presigned_url(self, object_name: str, content_type: str, expiration=120) -> str:
+        # Prevent traversal in object name
+        if ".." in object_name or object_name.startswith("/"):
+             raise ValueError("Invalid object name")
+        
         return self.presign_client.generate_presigned_url(
             "put_object",
             Params={"Bucket": self.bucket, "Key": object_name, "ContentType": content_type},
@@ -98,6 +107,8 @@ class S3StorageService(StorageServiceBase):
 
     @retry(stop=stop_after_attempt(2), wait=wait_exponential(multiplier=1, min=1, max=4))
     def verify_upload(self, object_name: str, expected_size_max: int = 8388608) -> bool:
+        if ".." in object_name or object_name.startswith("/"):
+             raise ValueError("Invalid object name")
         try:
             metadata = self.s3_client.head_object(Bucket=self.bucket, Key=object_name)
             if metadata["ContentLength"] > expected_size_max:
@@ -113,28 +124,32 @@ class S3StorageService(StorageServiceBase):
             raise e
 
     def download_file(self, object_name: str) -> bytes:
+        if ".." in object_name or object_name.startswith("/"):
+             raise ValueError("Invalid object name")
         response = self.s3_client.get_object(Bucket=self.bucket, Key=object_name)
         return response["Body"].read()
 
 class DiskStorageService(StorageServiceBase):
     def __init__(self):
-        self.upload_dir = settings.UPLOAD_DIR
-        self.base_url = "/uploads/content" # This needs to be served by FastAPI or the web server
+        self.upload_dir = os.path.abspath(settings.UPLOAD_DIR)
 
     def initialize(self):
         os.makedirs(self.upload_dir, exist_ok=True)
         print(f"Disk storage initialized at {self.upload_dir}")
 
+    def _get_safe_path(self, object_name: str) -> str:
+        file_path = os.path.normpath(os.path.join(self.upload_dir, object_name))
+        if not file_path.startswith(self.upload_dir):
+             raise ValueError("Path traversal attempt detected")
+        return file_path
+
     def generate_presigned_url(self, object_name: str, content_type: str, expiration=120) -> str:
-        # For disk storage, we return a local API endpoint that handles the upload
-        # In a real app, this might be a temporary signed URL to our own API.
-        # For simplicity, we point to /uploads/direct-upload/{object_name}
-        # The frontend will need to know if it's using S3 or Disk to handle the PUT.
-        # BUT the contract says "PUT to presigned URL". So we'll provide a URL that our API handles.
+        # Validate path but we don't return the path here, just the URL
+        self._get_safe_path(object_name)
         return f"{settings.PUBLIC_API_URL}/uploads/direct-upload/{object_name}"
 
     def verify_upload(self, object_name: str, expected_size_max: int = 8388608) -> bool:
-        file_path = os.path.join(self.upload_dir, object_name)
+        file_path = self._get_safe_path(object_name)
         if not os.path.exists(file_path):
             raise ValueError("File not found")
         size = os.path.getsize(file_path)
@@ -147,7 +162,7 @@ class DiskStorageService(StorageServiceBase):
         return True
 
     def download_file(self, object_name: str) -> bytes:
-        file_path = os.path.join(self.upload_dir, object_name)
+        file_path = self._get_safe_path(object_name)
         with open(file_path, "rb") as f:
             return f.read()
 

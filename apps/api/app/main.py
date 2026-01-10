@@ -3,6 +3,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.middleware.logging import RequestIDMiddleware
+from app.middleware.security import SecurityHeadersMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from app.db.base import Base
 from app.db.session import engine
 
@@ -49,8 +51,10 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Middleware
+# Middleware order: Security Headers -> Request ID -> Logging -> CORS -> Trusted Host
+app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RequestIDMiddleware)
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "*.render.com"])
 
 if settings.CORS_ORIGINS:
     print(f"DEBUG: Loading CORS_ORIGINS: {settings.CORS_ORIGINS}")

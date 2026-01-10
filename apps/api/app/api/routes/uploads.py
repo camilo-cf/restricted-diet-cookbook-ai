@@ -19,6 +19,7 @@ class PresignRequest(BaseModel):
     filename: str
     contentType: str
     sizeBytes: int
+    category: str = "recipes" # recipes | profiles
 
 class PresignResponse(BaseModel):
     uploadId: UUID4
@@ -40,9 +41,12 @@ async def create_presigned_url(
     if payload.contentType not in ["image/jpeg", "image/png", "image/webp"]:
         raise HTTPException(status_code=400, detail="Invalid content type")
 
-    # Generate unique key: user_id/uuid.ext
+    # Validate category
+    category = payload.category if payload.category in ["recipes", "profiles"] else "recipes"
+
+    # Generate unique key: category/user_id/uuid.ext
     ext = payload.filename.split(".")[-1] if "." in payload.filename else "bin"
-    object_key = f"{current_user.id}/{uuid.uuid4()}.{ext}"
+    object_key = f"{category}/{current_user.id}/{uuid.uuid4()}.{ext}"
 
     url = storage_service.generate_presigned_url(object_key, payload.contentType)
 

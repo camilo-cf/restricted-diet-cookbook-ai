@@ -49,8 +49,18 @@ class AIService:
             logger.warning("cost_guard_blocked", monthly_limit=cost_guard.monthly_limit_usd)
             raise Exception("Monthly cost limit exceeded")
 
+        system_prompt = (
+            "You are a world-class food safety and nutrition expert. "
+            "Your task is to identify ingredients that violate the specified dietary restrictions. "
+            "Be thorough: check for hidden ingredients (e.g., hidden sugars in sauces, gluten in soy sauce). "
+            "Output valid JSON: { \"issues\": [ { \"ingredient\": string, \"issue\": string, \"suggestion\": string } ] }. "
+            "The 'issue' field should briefly explain the violation. "
+            "The 'suggestion' should be a safe, delicious alternative. "
+            "If no issues, return an empty list for \"issues\"."
+        )
+        
         messages = [
-            {"role": "system", "content": "You are a food safety and nutrition expert. Check if the given ingredients violate the specified dietary restrictions. Output valid JSON: { \"issues\": [ { \"ingredient\": string, \"issue\": string, \"suggestion\": string } ] }. If no issues, return an empty list for \"issues\"."}
+            {"role": "system", "content": system_prompt}
         ]
         
         prompt = f"Ingredients: {', '.join(ingredients)}\nRestrictions: {', '.join(restrictions)}"
@@ -73,18 +83,32 @@ class AIService:
     )
     async def _generate_recipe_call(self, ingredients: list[str], restrictions: list[str], image_bytes: Optional[bytes] = None) -> Dict[str, Any]:
         
+        system_prompt = (
+            "You are an elite Michelin-star chef specializing in restricted dietary needs. "
+            "Your goal is to create gourmet, delicious, and safe recipes. "
+            "STRICT RULES:\n"
+            "1. NEVER use ingredients that violate the provided restrictions.\n"
+            "2. Ensure the recipe is cohesive and flavors are well-balanced.\n"
+            "3. Instructions must be clear, professional, and efficient.\n"
+            "4. Output strictly valid JSON matching this schema: "
+            "{ title: str, description: str, ingredients: string[], instructions: string[], dietary_tags: string[], prep_time_minutes: int, cook_time_minutes: int }."
+        )
+
         messages = [
-            {"role": "system", "content": "You are a professional chef specializing in restricted dietary needs. Output valid JSON matching this schema: { title: str, description: str, ingredients: string[], instructions: string[], dietary_tags: string[], prep_time_minutes: int, cook_time_minutes: int }."}
+            {"role": "system", "content": system_prompt}
         ]
 
         user_content = []
         
         # Text Prompt
-        prompt_text = f"Restrictions: {', '.join(restrictions)}."
+        prompt_text = (
+            f"Requirements: Strictly {', '.join(restrictions)}. "
+            "Focus on high-quality substitutions if needed."
+        )
         if ingredients:
-            prompt_text = f"Create a recipe using these ingredients: {', '.join(ingredients)}. " + prompt_text
+            prompt_text = f"Create a masterpiece using these core ingredients: {', '.join(ingredients)}. " + prompt_text
         else:
-            prompt_text = "Identify ingredients from the photo and create a recipe. " + prompt_text
+            prompt_text = "Analyze the photo for available ingredients and create a gourmet recipe. " + prompt_text
             
         user_content.append({"type": "text", "text": prompt_text})
 
