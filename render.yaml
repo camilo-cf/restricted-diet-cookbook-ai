@@ -12,10 +12,7 @@ services:
     healthCheckPath: /
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        fromService:
-          type: web
-          name: cookbook-backend
-          property: url
+        value: https://cookbook-backend.onrender.com
 
   # --------------------------------------------------------------------------------
   # BACKEND (Python/FastAPI)
@@ -29,10 +26,6 @@ services:
     dockerfilePath: ./apps/api/Dockerfile
     healthCheckPath: /health
     numInstances: 1
-    disk:
-      name: uploads-data
-      mountPath: /app/uploads
-      sizeGB: 1
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -47,10 +40,7 @@ services:
       - key: UPLOAD_DIR
         value: "/app/uploads"
       - key: CORS_ORIGINS
-        fromService:
-          type: web
-          name: cookbook-frontend
-          property: url
+        value: https://cookbook-frontend.onrender.com
       # API Key must be set manually in Render Dashboard for security
       - key: OPENAI_API_KEY
         sync: false
