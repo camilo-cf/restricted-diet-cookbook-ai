@@ -21,6 +21,12 @@ Cooking with dietary restrictions is a mental minefield. Whether it's **Celiac d
 
 **Live Demo**: [https://cookbook-frontend-k5lz.onrender.com](https://cookbook-frontend-k5lz.onrender.com)
 
+### 📸 Screenshots
+
+| Landing Page | Recipe Explorer | Detailed Recipe |
+| :---: | :---: | :---: |
+| ![Home](docs/img/1_home.png) | ![Browser](docs/img/2_browser.png) | ![Recipe](docs/img/3_recipe.png) |
+
 ---
 
 ## 🏗️ Architecture
@@ -44,12 +50,28 @@ graph TD
     class Frontend,Backend,DB,MinIO production;
 ```
 
-## 🛠️ Tech Stack & Roles
-*   **Web (`apps/web`)**: Next.js 14, Tailwind CSS, Shadcn UI. Handles User Journey, Wizard State, and client-side validation.
-*   **API (`apps/api`)**: Python FastAPI. Handles business logic, DB interactions, AI orchestration, and storage presigning.
-*   **Client (`packages/api-client`)**: Shared TypeScript library. Auto-generated from OpenAPI specs to ensure type safety.
-*   **DB**: PostgreSQL (Relational data for Recipes/Users).
-*   **Storage**: MinIO (S3-compatible object storage for photo uploads).
+## 🛠️ Tech Stack & System Architecture
+
+Cookbook AI is built with a modern, high-performance stack designed for modularity and scalability:
+
+-   **Frontend (`apps/web`)**: ⚛️ **Next.js 14**, **TypeScript**, **Tailwind CSS**, and **Shadcn UI**. It manages the stateful recipe generation "Wizard", leverages React Server Components where beneficial, and communicates with the backend via a generated, typesafe API client.
+-   **Backend (`apps/api`)**: ⚡ **FastAPI (Python)**. A high-performance, asynchronous REST API. It orchestrates AI recipe generation using **GPT-4o**, enforces **RBAC** (Admin, Maintainer, User roles), and manages secure session authentication with `HttpOnly` cookies.
+-   **API Contract (`packages/api-client`)**: 📜 **OpenAPI 3.1**. We use a code-generation approach to create a shared TypeScript library, ensuring the frontend is always in sync with backend schema changes.
+-   **Database Layer**: 🏛️ **SQLAlchemy 2.0 (ORM)** with **PostgreSQL** in production/Docker settings and **SQLite** for extremely fast, isolated unit and integration tests.
+-   **Object Storage**: 📦 **MinIO (S3-Compatible)** for local development and Cloudflare R2 / AWS S3 for production. Handles ingredient identification photos and user dish uploads.
+-   **Containerization & DevOps**: 🐋 **Docker** and **Docker Compose** for environment parity. **GitHub Actions** handles CI/CD (Lints, Type Checks, Vitest/Pytest execution).
+
+---
+
+## 🏛️ Database Integration
+
+The database layer is engineered for consistency and flexibility across different environments:
+
+1.  **Multi-Database Support**:
+    -   **Production/Development**: Uses **PostgreSQL** (via `asyncpg`) to support robust JSONB operations for dietary tags and complex relational queries.
+    -   **Automated Testing**: Uses **SQLite** (via **aiosqlite**) with an in-memory database strategy (`sqlite:///:memory:`). This ensures that every test run starts with a fresh, isolated schema, significantly speeding up the CI pipeline.
+2.  **Schema Management**: **Alembic** handles version-controlled migrations, ensuring that local database schemas can be safely evolved alongside the application code.
+3.  **ORM Pattern**: We utilize **SQLAlchemy’s Mapping System** to ensure that business logic remains independent of the underlying database engine. All JSON lists (Ingredients, Instructions) are automatically handled as native types in both Postgres and SQLite.
 
 ---
 
@@ -86,31 +108,60 @@ This is not just a wrapper; it's an engineered AI service. See [prompts/AGENT_SY
 
 **Prerequisites**: Docker Desktop, Node.js 20+, Pnpm.
 
-1.  **Clone & Install**
+### 1. Simple Setup (Docker Compose)
+The easiest way to run the entire system is using the provided `run.sh` script, which wraps Docker Compose for a seamless experience.
+
+1.  **Clone the Repository**
     ```bash
     git clone https://github.com/your-username/restricted-diet-cookbook-ai.git
     cd restricted-diet-cookbook-ai
-    pnpm install
     ```
 
-2.  **Start Stack (Recommended)**
-    Uses `run.sh` wrapper for Docker Compose.
+2.  **Initialize & Start**
     ```bash
     ./run.sh dev
     ```
     *   Frontend: `http://localhost:3000`
     *   Backend Docs: `http://localhost:8000/docs`
     *   MinIO Console: `http://localhost:9001`
+    This command will:
+    - Build the Frontend and Backend images.
+    - Start PostgreSQL, MinIO, Backend, and Frontend containers.
+    - Automatically initialize the MinIO bucket storage.
 
-3.  **Run Tests**
+3.  **Run Migrations**
+    ```bash
+    ./run.sh migrate
+    ```
+
+4.  **Run Tests**
     ```bash
     ./run.sh test    # Runs Pytest (Backend) and Vitest (Frontend)
     ```
 
-4.  **Verification**
-    ```bash
-    ./run.sh check   # Linting, Types, Client Freshness
-    ```
+### 2. Manual Docker Control
+If you prefer using standard Docker commands:
+```bash
+# Start all services
+docker compose up -d
+
+# Run database migrations
+docker compose exec backend alembic upgrade head
+
+# View logs
+docker compose logs -f
+```
+
+### 3. Access URLs
+-   **Frontend**: `http://localhost:3000`
+-   **Backend API API Docs**: `http://localhost:8000/docs`
+-   **MinIO Storage Dashboard**: `http://localhost:9001` (User/Pass: `minioadmin`/`minioadmin`)
+
+### 4. Verification Commands
+```bash
+./run.sh test    # Runs Pytest (Backend) and Vitest (Frontend)
+./run.sh check   # Full check: Linting, Types, API Client Freshness
+```
 
 ---
 
