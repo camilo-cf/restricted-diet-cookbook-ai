@@ -45,12 +45,8 @@ class UserProfileUpdate(BaseModel):
 def to_user_response(user: User) -> UserResponse:
     profile_url = None
     if user.profile_image:
-        if settings.STORAGE_BACKEND == "disk":
-            profile_url = f"{settings.PUBLIC_API_URL}/uploads/content/{user.profile_image.object_key}"
-        else:
-            # Use PUBLIC_AWS_ENDPOINT_URL for browser-accessible links
-            base_url = settings.PUBLIC_AWS_ENDPOINT_URL or settings.AWS_ENDPOINT_URL
-            profile_url = f"{base_url}/{settings.AWS_BUCKET_NAME}/{user.profile_image.object_key}"
+        # Use proxy endpoint for ALL backends (supports private buckets via redirect)
+        profile_url = f"{settings.PUBLIC_API_URL}/uploads/content/{user.profile_image.object_key}"
     
     prefs = []
     if user.dietary_preferences:
@@ -212,33 +208,29 @@ async def delete_user_me(
         raise HTTPException(status_code=403, detail="Cannot delete demo account")
 
     try:
-        from app.db.models.upload import Upload
-        from app.db.models.recipe import Recipe
-        from sqlalchemy import delete, select
+        import uuid
         
-        # 1. Break circular dependency (User.profile_image_id -> Upload.id)
+        # Soft Delete: Anonymize and deactivate to preserve recipes (posts)
+        
+        # 1. Remove profile picture reference
         current_user.profile_image_id = None
+        
+        # 2. Anonymize Personal Information
+        # Maintain email uniqueness constraint by using a unique deleted pattern
+        unique_suffix = uuid.uuid4().hex[:8]
+        current_user.email = f"deleted_{current_user.id}_{unique_suffix}@deleted.user"
+        current_user.full_name = "Deleted User"
+        current_user.bio = "This user has deleted their account."
+        current_user.dietary_preferences = None
+        
+        # 3. Securely scramble password and deactivate
+        current_user.hashed_password = f"deleted_{uuid.uuid4()}" 
+        current_user.is_active = False
+        
         db.add(current_user)
-        # We also need to flush this change before attempting to delete uploads that might be referenced
-        await db.commit() 
-        
-        # 2. Delete ALL Recipes first (since they might point to Uploads or User)
-        await db.execute(delete(Recipe).where(Recipe.user_id == current_user.id))
-        
-        # 3. Delete ALL Uploads (Profile pics, recipe images, etc)
-        await db.execute(delete(Upload).where(Upload.user_id == current_user.id))
-        
-        # 4. Delete the user
-        await db.delete(current_user)
         await db.commit()
-        
-        # 5. Verify deletion
-        verify = await db.execute(select(User).where(User.id == current_user.id))
-        if verify.scalars().first():
-            print("CRITICAL: User was NOT deleted despite commit")
-            raise HTTPException(status_code=500, detail="Database verify failed")
-            
-        print(f"User {current_user.id} deleted successfully")
+
+        print(f"User {current_user.id} soft-deleted successfully")
 
     except Exception as e:
         print(f"Error deleting user: {str(e)}")

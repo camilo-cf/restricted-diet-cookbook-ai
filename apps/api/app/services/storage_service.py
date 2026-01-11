@@ -15,7 +15,7 @@ class StorageServiceBase(ABC):
         pass
 
     @abstractmethod
-    def generate_presigned_url(self, object_name: str, content_type: str, expiration=120) -> str:
+    def generate_presigned_url(self, object_name: str, content_type: str = None, expiration=120, operation="put_object") -> str:
         pass
 
     @abstractmethod
@@ -94,14 +94,18 @@ class S3StorageService(StorageServiceBase):
         }
         self.s3_client.put_bucket_cors(Bucket=self.bucket, CORSConfiguration=cors_configuration)
 
-    def generate_presigned_url(self, object_name: str, content_type: str, expiration=120) -> str:
+    def generate_presigned_url(self, object_name: str, content_type: str = None, expiration=120, operation="put_object") -> str:
         # Prevent traversal in object name
         if ".." in object_name or object_name.startswith("/"):
              raise ValueError("Invalid object name")
         
+        params = {"Bucket": self.bucket, "Key": object_name}
+        if content_type and operation == "put_object":
+            params["ContentType"] = content_type
+            
         return self.presign_client.generate_presigned_url(
-            "put_object",
-            Params={"Bucket": self.bucket, "Key": object_name, "ContentType": content_type},
+            operation,
+            Params=params,
             ExpiresIn=expiration,
         )
 
@@ -143,7 +147,7 @@ class DiskStorageService(StorageServiceBase):
              raise ValueError("Path traversal attempt detected")
         return file_path
 
-    def generate_presigned_url(self, object_name: str, content_type: str, expiration=120) -> str:
+    def generate_presigned_url(self, object_name: str, content_type: str = None, expiration=120, operation="put_object") -> str:
         # Validate path but we don't return the path here, just the URL
         self._get_safe_path(object_name)
         return f"{settings.PUBLIC_API_URL}/uploads/direct-upload/{object_name}"

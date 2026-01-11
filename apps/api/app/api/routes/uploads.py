@@ -1,7 +1,7 @@
 import os
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import BaseModel, UUID4
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -62,11 +62,9 @@ async def create_presigned_url(
     await db.refresh(upload_record)
 
     # Calculate image URL for preview
-    if settings.STORAGE_BACKEND == "disk":
-        image_url = f"{settings.PUBLIC_API_URL}/uploads/content/{object_key}"
-    else:
-        base_url = settings.PUBLIC_AWS_ENDPOINT_URL or settings.AWS_ENDPOINT_URL
-        image_url = f"{base_url}/{settings.AWS_BUCKET_NAME}/{object_key}"
+    # Calculate image URL for preview
+    # Use the proxy endpoint for ALL backends to support private buckets via authenticated/signed redirection
+    image_url = f"{settings.PUBLIC_API_URL}/uploads/content/{object_key}"
 
     return {"uploadId": upload_record.id, "uploadUrl": url, "imageUrl": image_url}
 
@@ -86,15 +84,30 @@ async def direct_upload(object_key: str, request: Request):
 
 @router.get("/content/{object_key:path}")
 async def get_content(object_key: str):
-    """Serve uploaded content when using local disk storage."""
-    if settings.STORAGE_BACKEND != "disk":
-        raise HTTPException(status_code=404, detail="Not using disk storage")
+    """
+    Serve uploaded content. 
+    1. If Disk: Serve file directly.
+    2. If S3/R2: Redirect to a short-lived presigned GET URL (allows private buckets).
+    """
+    if settings.STORAGE_BACKEND == "disk":
+        file_path = os.path.join(settings.UPLOAD_DIR, object_key)
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="File not found")
+        return FileResponse(file_path)
     
-    file_path = os.path.join(settings.UPLOAD_DIR, object_key)
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="File not found")
-    
-    return FileResponse(file_path)
+    # S3/R2 Fallback logic
+    try:
+        # Generate a short-lived presigned GET URL (5 minutes)
+        url = storage_service.generate_presigned_url(
+            object_key, 
+            content_type=None, 
+            expiration=300, 
+            operation="get_object"
+        )
+        return RedirectResponse(url)
+    except Exception as e:
+         print(f"Error generating presigned URL for {object_key}: {e}")
+         raise HTTPException(status_code=404, detail="Content not accessible")
 
 @router.post("/complete")
 async def complete_upload(
