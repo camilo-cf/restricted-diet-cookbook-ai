@@ -122,9 +122,10 @@ async def test_uploads_direct_upload_not_disk():
 @pytest.mark.asyncio
 async def test_uploads_get_content_not_disk():
     with patch("app.api.routes.uploads.settings.STORAGE_BACKEND", "s3"):
-        with pytest.raises(HTTPException) as exc:
-            await get_content("test.jpg")
-    assert exc.value.status_code == 404
+        with patch("app.api.routes.uploads.storage_service.generate_presigned_url", return_value="http://redirect-url"):
+            resp = await get_content("test.jpg")
+            assert resp.status_code == 307
+            assert resp.headers["location"] == "http://redirect-url"
 
 @pytest.mark.asyncio
 async def test_uploads_complete_not_found():

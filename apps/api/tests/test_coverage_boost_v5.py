@@ -24,10 +24,9 @@ async def test_auth_profile_url_public_aws():
     upload = Upload(object_key="profiles/me.jpg")
     user.profile_image = upload
     with patch("app.api.routes.auth.settings") as mock_settings:
-        mock_settings.PUBLIC_AWS_ENDPOINT_URL = "http://public-s3"
-        mock_settings.AWS_BUCKET_NAME = "bucket"
+        mock_settings.PUBLIC_API_URL = "http://api.com"
         resp = to_user_response(user)
-        assert "http://public-s3/bucket/profiles/me.jpg" == resp.profileImageUrl
+        assert "http://api.com/uploads/content/profiles/me.jpg" == resp.profileImageUrl
 
 @pytest.mark.asyncio
 async def test_auth_dietary_prefs_invalid_json():
