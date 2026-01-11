@@ -3,6 +3,7 @@ import RegisterPage from "./page";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/Toast";
 
 // Mock Next.js navigation
 vi.mock("next/navigation", () => ({
@@ -17,14 +18,21 @@ vi.mock("@/lib/api", () => ({
   },
 }));
 
+// Mock Toast
+vi.mock("@/components/ui/Toast", () => ({
+  useToast: vi.fn(() => ({ toast: vi.fn() })),
+}));
+
 describe("RegisterPage", () => {
   const mockPush = vi.fn();
+  const mockToast = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     (useRouter as any).mockReturnValue({
       push: mockPush,
     });
+    (useToast as any).mockReturnValue({ toast: mockToast });
   });
 
   it("renders register form", () => {
@@ -74,11 +82,9 @@ describe("RegisterPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /Create Account/i }));
 
     await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith("Account created successfully! Redirecting to login...", "success");
       expect(screen.getByText(/Welcome to the Kitchen!/i)).toBeInTheDocument();
     }, { timeout: 4000 });
-
-    // We don't wait for the redirect here to avoid long test times, 
-    // but the success message confirms the flow worked.
   });
 
   it("handles registration failure with detail", async () => {
@@ -94,7 +100,7 @@ describe("RegisterPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /Create Account/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Email already exists/i)).toBeInTheDocument();
+      expect(mockToast).toHaveBeenCalledWith("Email already exists", "error");
     });
   });
 });

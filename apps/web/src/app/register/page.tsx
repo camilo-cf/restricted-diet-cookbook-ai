@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Leaf, UserPlus, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
+import { useToast } from "@/components/ui/Toast";
 
 const schema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters"),
@@ -26,7 +27,7 @@ type FormData = z.infer<typeof schema>;
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
   const [success, setSuccess] = useState(false);
 
   const {
@@ -38,7 +39,6 @@ export default function RegisterPage() {
   });
 
   const onSubmit = async (data: FormData) => {
-    setError(null);
     try {
       const { error: apiError } = await api.POST("/auth/register", {
         body: {
@@ -49,19 +49,20 @@ export default function RegisterPage() {
 
       if (apiError) {
           if (typeof apiError === "object" && (apiError as any).detail) {
-              setError((apiError as any).detail);
+              toast((apiError as any).detail, "error");
           } else {
-              setError("Registration failed. Email might already be in use.");
+              toast("Registration failed. Email might already be in use.", "error");
           }
         return;
       }
 
+      toast("Account created successfully! Redirecting to login...", "success");
       setSuccess(true);
       setTimeout(() => {
         router.push("/login");
       }, 3000);
     } catch (err) {
-      setError("An unexpected error occurred");
+      toast("An unexpected error occurred", "error");
       console.error(err);
     }
   };
@@ -165,12 +166,6 @@ export default function RegisterPage() {
                   <p className="text-xs text-destructive mt-1 font-medium">{errors.confirmPassword.message}</p>
                 )}
               </div>
-
-              {error && (
-                <div className="rounded-xl bg-destructive/10 p-4 text-sm text-destructive font-medium animate-shake">
-                  {error}
-                </div>
-              )}
 
               <Button
                   type="submit"

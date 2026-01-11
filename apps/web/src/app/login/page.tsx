@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -11,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Leaf } from "lucide-react";
 import Link from "next/link";
+import { useToast } from "@/components/ui/Toast";
 
 const schema = z.object({
   email: z.string().email("Invalid email address"),
@@ -21,7 +21,7 @@ type FormData = z.infer<typeof schema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
   const {
     register,
     handleSubmit,
@@ -31,7 +31,6 @@ export default function LoginPage() {
   });
 
   const onSubmit = async (data: FormData) => {
-    setError(null);
     try {
       const { error: apiError } = await api.POST("/auth/login", {
         body: {
@@ -41,13 +40,14 @@ export default function LoginPage() {
       });
 
       if (apiError) {
-        setError("Invalid credentials");
+        toast("Invalid credentials", "error");
         return;
       }
 
+      toast("Login successful! Redirecting...", "success");
       window.location.href = "/recipes";
     } catch (err) {
-      setError("An unexpected error occurred");
+      toast("An unexpected error occurred", "error");
       console.error(err);
     }
   };
@@ -101,12 +101,6 @@ export default function LoginPage() {
                   <p className="text-sm text-destructive">{errors.password.message}</p>
                 )}
               </div>
-
-              {error && (
-                <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
-                  {error}
-                </div>
-              )}
 
               <Button
                   type="submit"

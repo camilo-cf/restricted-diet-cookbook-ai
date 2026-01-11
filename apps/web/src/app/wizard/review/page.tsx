@@ -5,12 +5,13 @@ import { useWizard } from "@/context/wizard-context";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Sparkles, Edit2 } from "lucide-react";
-
+import { useToast } from "@/components/ui/Toast";
 import { api } from "@/lib/api";
 
 export default function ReviewPage() {
   const router = useRouter();
   const { data, updateData } = useWizard();
+  const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerate = async () => {
@@ -28,7 +29,7 @@ export default function ReviewPage() {
 
         if (error || !recipe) {
             console.error("Generation failed", error);
-            alert("Failed to generate recipe. Please try again.");
+            toast("Failed to generate recipe. Please try again.", "error");
             setIsGenerating(false);
             return;
         }
@@ -38,7 +39,7 @@ export default function ReviewPage() {
 
     } catch (e) {
         console.error(e);
-        alert("An unexpected error occurred.");
+        toast("An unexpected error occurred.", "error");
         setIsGenerating(false);
     }
   };

@@ -3,6 +3,7 @@ import LoginPage from "./page";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/Toast";
 
 // Mock Next.js navigation
 vi.mock("next/navigation", () => ({
@@ -16,14 +17,21 @@ vi.mock("@/lib/api", () => ({
   },
 }));
 
+// Mock Toast
+vi.mock("@/components/ui/Toast", () => ({
+  useToast: vi.fn(() => ({ toast: vi.fn() })),
+}));
+
 describe("LoginPage", () => {
   const mockPush = vi.fn();
+  const mockToast = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     (useRouter as any).mockReturnValue({
       push: mockPush,
     });
+    (useToast as any).mockReturnValue({ toast: mockToast });
   });
 
   it("renders login form", () => {
@@ -74,6 +82,7 @@ describe("LoginPage", () => {
       expect(api.POST).toHaveBeenCalledWith("/auth/login", {
         body: { username: "test@example.com", password: "password123" },
       });
+      expect(mockToast).toHaveBeenCalledWith("Login successful! Redirecting...", "success");
       expect(window.location.href).toBe("/recipes");
     });
 
@@ -94,7 +103,7 @@ describe("LoginPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /Sign in/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Invalid credentials/i)).toBeInTheDocument();
+      expect(mockToast).toHaveBeenCalledWith("Invalid credentials", "error");
     });
   });
 });

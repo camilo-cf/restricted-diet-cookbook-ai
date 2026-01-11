@@ -4,6 +4,7 @@ import { vi, describe, it, expect, beforeEach } from "vitest";
 import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { useWizard } from "@/context/wizard-context";
+import { useToast } from "@/components/ui/Toast";
 
 // Mock Next.js navigation
 vi.mock("next/navigation", () => ({
@@ -22,10 +23,16 @@ vi.mock("@/lib/api", () => ({
   },
 }));
 
+// Mock Toast
+vi.mock("@/components/ui/Toast", () => ({
+  useToast: vi.fn(() => ({ toast: vi.fn() })),
+}));
+
 describe("ReviewPage", () => {
   const mockPush = vi.fn();
   const mockBack = vi.fn();
   const mockUpdateData = vi.fn();
+  const mockToast = vi.fn();
   const mockData = {
     ingredients: "Tomato, Onion",
     restrictions: "Gluten-Free",
@@ -37,8 +44,7 @@ describe("ReviewPage", () => {
     vi.clearAllMocks();
     (useRouter as any).mockReturnValue({ push: mockPush, back: mockBack });
     (useWizard as any).mockReturnValue({ data: mockData, updateData: mockUpdateData });
-    // Mock alert
-    vi.stubGlobal("alert", vi.fn());
+    (useToast as any).mockReturnValue({ toast: mockToast });
   });
 
   it("renders review details from wizard context", () => {
@@ -77,7 +83,7 @@ describe("ReviewPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /Generate Recipe/i }));
 
     await waitFor(() => {
-      expect(window.alert).toHaveBeenCalledWith("Failed to generate recipe. Please try again.");
+      expect(mockToast).toHaveBeenCalledWith("Failed to generate recipe. Please try again.", "error");
     });
   });
 

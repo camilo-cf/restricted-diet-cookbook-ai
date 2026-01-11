@@ -31,6 +31,20 @@ Our AI integration is protected by distributed circuit breakers. If the OpenAI A
 ### 3. Structured Output (GPT-4o)
 We leverage GPT-4o with strict JSON schema enforcement. This guarantees that recipes are always safe, wellformatted, and parsable by the frontend.
 
+## 🎨 User Experience & Feedback
+
+### Toast Notification System
+All user-facing feedback messages are delivered through a unified toast notification system (`useToast` hook). This provides:
+- **Consistency**: Success, error, and informational messages have a uniform appearance across the app.
+- **Non-blocking UX**: Toasts auto-dismiss after a timeout, keeping users in flow.
+- **Accessibility**: Messages are visible regardless of scroll position.
+
+Toast notifications are used for:
+- **Authentication**: Login/register success and error feedback
+- **Recipe Operations**: Create, save, delete confirmations
+- **Photo Uploads**: Upload progress and errors
+- **Profile Management**: Profile updates and deletions
+
 ## 🗄️ Persistence & Storage
 
 - **Database**: PostgreSQL (via SQLAlchemy) for relational integrity and RBAC user management.
