@@ -11,7 +11,7 @@ import { Search, Clock, Users, ChefHat } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { clsx } from "clsx";
 
-const DIETARY_OPTIONS = ["Vegan", "Keto", "Gluten-free", "Dairy-free", "Nut-free", "Low-carb", "Sugar-free"];
+const DIETARY_OPTIONS = ["Vegetarian", "Vegan", "Gluten-free", "Dairy-free", "Nut-free", "Keto", "Paleo", "Low-carb", "Sugar-free", "Halal", "Kosher", "Pescatarian", "Low FODMAP"];
 
 function RecipeExplorerContent() {
   const searchParams = useSearchParams();
