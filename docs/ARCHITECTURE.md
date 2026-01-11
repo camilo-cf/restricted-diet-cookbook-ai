@@ -35,11 +35,12 @@ We leverage GPT-4o with strict JSON schema enforcement. This guarantees that rec
 
 - **Database**: PostgreSQL (via SQLAlchemy) for relational integrity and RBAC user management.
 - **Object Storage**: Multi-backend support for scale and flexibility.
-  - **Production (AWS S3)**: Tiered object storage for secure, external image hosting.
-  - **Fallback/Free Tier (Local Disk)**: Persistent volume storage for rapid development and low-cost deployments.
+  - **Production (Cloudflare R2 / AWS S3)**: S3-compatible object storage for secure, persistent image hosting. Recommended for production to avoid data loss on container restarts.
+  - **Development (Local Disk)**: Local filesystem storage for rapid development.
 - **Authentication**: Secure `HttpOnly` Cookie-based sessions.
   - **Cross-Domain Support**: Backend uses `SameSite=None; Secure` to allow session persistence between Render subdomains.
   - **Auth Guards**: Implemented via client-side layouts (`/wizard`, `/profile`) to ensure compatibility with Render's edge routing that might obscure cookies from server-side middleware.
+  - **Privacy**: Users have full control to permanently delete their account and associated data (GDPR compliant).
 
 ## 📈 Scalability & Performance
 

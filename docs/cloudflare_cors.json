@@ -1,0 +1,21 @@
+[
+    {
+        "AllowedOrigins": [
+            "https://cookbook-frontend-YOUR_ID.onrender.com",
+            "http://localhost:3000"
+        ],
+        "AllowedMethods": [
+            "GET",
+            "PUT",
+            "POST",
+            "HEAD"
+        ],
+        "AllowedHeaders": [
+            "*"
+        ],
+        "ExposeHeaders": [
+            "ETag"
+        ],
+        "MaxAgeSeconds": 3000
+    }
+]
