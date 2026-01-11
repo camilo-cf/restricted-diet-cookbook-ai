@@ -93,7 +93,11 @@ class AIService:
             "STRICT RULES:\n"
             "1. NEVER use ingredients that violate the provided dietary restrictions.\n"
             "2. Be realistic with prep and cook times.\n"
-            "3. Instructions should be clear and numbered.\n\n"
+            "3. Instructions should be clear and numbered.\n"
+            "4. DIETARY ANALYSIS: For the final tagging, you MUST explicitly evaluate the recipe against the following list: "
+            "[Vegetarian, Vegan, Gluten-free, Dairy-free, Nut-free, Keto, Paleo, Low-carb, Sugar-free, Halal, Kosher, Pescatarian, Low FODMAP]. "
+            "For each diet, determine YES or NO based on the ingredients. "
+            "Then, add ALL diets marked YES to the 'dietary_tags' array. Do not miss any applicable tag.\n\n"
             "Output valid JSON: { title: str, description: str, ingredients: string[], instructions: string[], "
             "dietary_tags: string[], prep_time_minutes: int, cook_time_minutes: int, servings: int, difficulty: str }."
         )
