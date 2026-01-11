@@ -126,7 +126,7 @@ async def login(
     # Note: For cross-site frontend/backend on Render subdomains, 
     # we MUST use samesite="none" and secure=True.
     response.set_cookie(
-        key="session_id",
+        key=settings.SESSION_COOKIE_NAME,
         value=token,
         httponly=True,
         samesite="none",
@@ -141,7 +141,7 @@ async def login(
 async def logout(response: Response):
     # Use SameSite=None and Secure=True to match the login cookie attributes
     response.delete_cookie(
-        key="session_id", 
+        key=settings.SESSION_COOKIE_NAME, 
         httponly=True, 
         samesite="none", 
         secure=True
@@ -194,7 +194,7 @@ async def update_user_me(
     user = result.scalars().first()
     return to_user_response(user)
 
-@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/me", status_code=status.HTTP_200_OK)
 async def delete_user_me(
     response: Response,
     db: AsyncSession = Depends(get_db),
@@ -256,4 +256,4 @@ async def delete_user_me(
         secure=True
     )
     
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"message": "Account deleted successfully"})
