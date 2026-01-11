@@ -234,9 +234,12 @@ async def delete_recipe(
     current_user: User = Depends(get_current_user),
 ) -> Any:
     """
-    Delete a recipe.
+    Delete a recipe and its associated image.
     """
-    result = await db.execute(select(Recipe).where(Recipe.id == id))
+    # Load recipe with upload relationship to get the image object_key
+    result = await db.execute(
+        select(Recipe).options(selectinload(Recipe.upload)).where(Recipe.id == id)
+    )
     recipe = result.scalars().first()
     if not recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
@@ -252,6 +255,15 @@ async def delete_recipe(
             status_code=status.HTTP_403_FORBIDDEN, 
             detail="Not enough permissions to delete this recipe"
         )
+    
+    # Delete associated image from storage if it exists
+    if recipe.upload and recipe.upload.object_key:
+        from app.services.storage_service import storage_service
+        try:
+            storage_service.delete_file(recipe.upload.object_key)
+        except Exception as e:
+            # Log the error but don't fail the recipe deletion
+            print(f"Warning: Failed to delete image {recipe.upload.object_key}: {e}")
     
     await db.delete(recipe)
     await db.commit()

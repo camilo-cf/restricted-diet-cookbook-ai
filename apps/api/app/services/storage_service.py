@@ -26,6 +26,10 @@ class StorageServiceBase(ABC):
     def download_file(self, object_name: str) -> bytes:
         pass
 
+    @abstractmethod
+    def delete_file(self, object_name: str) -> bool:
+        pass
+
 class S3StorageService(StorageServiceBase):
     def __init__(self):
         self.s3_client = boto3.client(
@@ -133,6 +137,17 @@ class S3StorageService(StorageServiceBase):
         response = self.s3_client.get_object(Bucket=self.bucket, Key=object_name)
         return response["Body"].read()
 
+    def delete_file(self, object_name: str) -> bool:
+        """Delete a file from S3 storage."""
+        if ".." in object_name or object_name.startswith("/"):
+             raise ValueError("Invalid object name")
+        try:
+            self.s3_client.delete_object(Bucket=self.bucket, Key=object_name)
+            return True
+        except botocore.exceptions.ClientError as e:
+            print(f"Error deleting object {object_name}: {e}")
+            return False
+
 class DiskStorageService(StorageServiceBase):
     def __init__(self):
         self.upload_dir = os.path.abspath(settings.UPLOAD_DIR)
@@ -169,6 +184,18 @@ class DiskStorageService(StorageServiceBase):
         file_path = self._get_safe_path(object_name)
         with open(file_path, "rb") as f:
             return f.read()
+
+    def delete_file(self, object_name: str) -> bool:
+        """Delete a file from disk storage."""
+        try:
+            file_path = self._get_safe_path(object_name)
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                return True
+            return False
+        except Exception as e:
+            print(f"Error deleting file {object_name}: {e}")
+            return False
 
 def get_storage_service() -> StorageServiceBase:
     if settings.STORAGE_BACKEND == "disk":

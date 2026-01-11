@@ -149,3 +149,57 @@ async def test_recipe_validation(client_with_auth: AsyncClient):
     client_with_auth.cookies.delete("session_id")
     res_anon = await client_with_auth.post("/recipes", json={"title": "test", "ingredients": [], "instruction_text": "test", "dietary_tags": []})
     assert res_anon.status_code == 401
+
+@pytest.mark.asyncio
+async def test_recipe_deletion_deletes_image(client_with_auth: AsyncClient, db: AsyncSession):
+    """Test that deleting a recipe also deletes its associated image from storage."""
+    from unittest.mock import patch, MagicMock
+    from app.db.models.upload import Upload
+    
+    # Create a recipe with an upload
+    recipe_data = {
+        "title": "Recipe with Image",
+        "ingredients": ["test"],
+        "instruction_text": "test",
+        "dietary_tags": []
+    }
+    create_res = await client_with_auth.post("/recipes", json=recipe_data)
+    assert create_res.status_code == 201
+    recipe_id = create_res.json()["id"]
+    
+    # Get the current user to create an upload
+    from app.api.deps_auth import get_current_user
+    from app.api.deps import get_db as get_db_dep
+    
+    # Manually create an upload record and associate it with the recipe
+    result = await db.execute(select(Recipe).where(Recipe.id == uuid.UUID(recipe_id)))
+    recipe = result.scalars().first()
+    
+    upload = Upload(
+        id=uuid.uuid4(),
+        user_id=recipe.user_id,
+        object_key="recipes/test-image.jpg",
+        content_type="image/jpeg",
+        is_completed=True
+    )
+    db.add(upload)
+    await db.commit()
+    
+    # Associate upload with recipe
+    recipe.upload_id = upload.id
+    await db.commit()
+    
+    # Mock the storage service's delete_file method
+    with patch('app.services.storage_service.storage_service.delete_file') as mock_delete:
+        mock_delete.return_value = True
+        
+        # Delete the recipe
+        del_res = await client_with_auth.delete(f"/recipes/{recipe_id}")
+        assert del_res.status_code == 204
+        
+        # Verify that delete_file was called with the correct object_key
+        mock_delete.assert_called_once_with("recipes/test-image.jpg")
+    
+    # Verify recipe is deleted
+    verify_res = await client_with_auth.get(f"/recipes/{recipe_id}")
+    assert verify_res.status_code == 404
