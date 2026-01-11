@@ -35,6 +35,7 @@ export default function ProfilePage() {
   const [uploading, setUploading] = useState(false);
   const [selectedPrefs, setSelectedPrefs] = useState<string[]>([]);
   const [success, setSuccess] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const {
     register,
@@ -339,17 +340,31 @@ export default function ProfilePage() {
                              </div>
                              <Button 
                                 variant="destructive"
+                                disabled={deleting}
                                 onClick={async () => {
                                     if (confirm("Are you ABSOLUTELY sure? This cannot be undone.")) {
+                                        setDeleting(true);
                                         try {
-                                             await api.DELETE("/auth/me");
+                                             const { error } = await api.DELETE("/auth/me");
+                                             
+                                             if (error) {
+                                                console.error("Delete failed:", error);
+                                                toast("Failed to delete account. Please try again.", "error");
+                                                setDeleting(false);
+                                                return;
+                                             }
+
+                                             // Force full reload to clear all client state
                                              window.location.href = "/";
                                         } catch (e) {
-                                            toast("Failed to delete account", "error");
+                                            console.error(e);
+                                            toast("Failed to connect to server.", "error");
+                                            setDeleting(false);
                                         }
                                     }
                                 }}
                              >
+                                {deleting ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
                                 Delete Account
                              </Button>
                          </div>
